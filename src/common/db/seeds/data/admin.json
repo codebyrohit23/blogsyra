@@ -1,0 +1,27 @@
+[
+  {
+    "email": "superadmin@company.com",
+    "firstName": "Super",
+    "lastName": "Admin",
+    "password": "SuperAdmin@123",
+    "roles": ["super_admin"],
+    "isActive": true,
+    "isSuperAdmin": true
+  },
+  {
+    "email": "admin@company.com",
+    "firstName": "System",
+    "lastName": "Administrator",
+    "password": "Admin@123",
+    "roles": ["admin", "manager"],
+    "isActive": true
+  },
+  {
+    "email": "manager@company.com",
+    "firstName": "Project",
+    "lastName": "Manager",
+    "password": "Manager@123",
+    "roles": ["manager", "user"],
+    "isActive": true
+  }
+]

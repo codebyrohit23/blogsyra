@@ -1,0 +1,26 @@
+[
+  {
+    "resource": "users",
+    "action": "create",
+    "description": "Create new users",
+    "isActive": true
+  },
+  {
+    "resource": "users",
+    "action": "read",
+    "description": "View user information",
+    "isActive": true
+  },
+  {
+    "resource": "users",
+    "action": "update",
+    "description": "Update user information",
+    "isActive": true
+  },
+  {
+    "resource": "users",
+    "action": "delete",
+    "description": "Delete users",
+    "isActive": true
+  }
+]
