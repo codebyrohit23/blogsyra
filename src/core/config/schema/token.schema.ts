@@ -2,15 +2,15 @@ import { REDIS_TTL } from '@/shared/constants';
 import { z } from 'zod';
 
 export const tokenEnvSchema = z.object({
-  // TOKEN_PRIVATE_KEY: z
-  //   .string()
-  //   .min(1, 'PRIVATE_KEY is required')
-  //   .refine((val) => val.includes('BEGIN PRIVATE KEY'), 'PRIVATE_KEY must be a valid PEM'),
+  TOKEN_PRIVATE_KEY: z
+    .string()
+    .min(1, 'PRIVATE_KEY is required')
+    .refine((val) => val.includes('BEGIN PRIVATE KEY'), 'PRIVATE_KEY must be a valid PEM'),
 
-  // TOKEN_PUBLIC_KEY: z
-  //   .string()
-  //   .min(1, 'PUBLIC_KEY is required')
-  //   .refine((val) => val.includes('BEGIN PUBLIC KEY'), 'PUBLIC_KEY must be a valid PEM'),
+  TOKEN_PUBLIC_KEY: z
+    .string()
+    .min(1, 'PUBLIC_KEY is required')
+    .refine((val) => val.includes('BEGIN PUBLIC KEY'), 'PUBLIC_KEY must be a valid PEM'),
 
   ACCESS_TOKEN_EXPIRES_IN: z
     .string()

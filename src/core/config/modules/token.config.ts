@@ -1,11 +1,11 @@
 import { env } from '../env';
 
 export const tokenConfig = {
-  // privateKey: env.TOKEN_PRIVATE_KEY?.replace(/\\n/g, '\n') // escaped newlines → real newlines
-  //   .replace(/\r\n/g, '\n') // Windows line endings
-  //   .trim(),
+  privateKey: env.TOKEN_PRIVATE_KEY?.replace(/\\n/g, '\n') // escaped newlines → real newlines
+    .replace(/\r\n/g, '\n') // Windows line endings
+    .trim(),
 
-  // publicKey: env.TOKEN_PUBLIC_KEY?.replace(/\\n/g, '\n').trim(),
+  publicKey: env.TOKEN_PUBLIC_KEY?.replace(/\\n/g, '\n').trim(),
 
   access: {
     // secret: env.ACCESS_TOKEN_SECRET,
