@@ -95,6 +95,11 @@ app.use(httpLogger);
 
 // Routes
 app.use('/api/v1', v1Routes);
+
+app.get('/healthz', (req, res) => {
+  res.send('OK');
+});
+
 // ✅ Handle unknown routes
 app.use((req: Request, res: Response, next: NextFunction) => {
   next(new ApiError(`Can't find ${req.originalUrl} on this server!`, HttpStatus.NOT_FOUND));

@@ -55,6 +55,7 @@ temp/
 prisma/migrations/
 
 # Secrets
+etc/
 secrets/
 
 # extra
