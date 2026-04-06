@@ -54,7 +54,7 @@ export interface SendErrorPayload {
 export interface SuccessResponse<T = undefined> {
   success: true;
   message: string;
-  data?: T;
+  data: T | null;
   pagination?: Pagination;
 }
 

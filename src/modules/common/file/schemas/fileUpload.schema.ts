@@ -1,13 +1,13 @@
-import { z } from 'zod';
+// import { z } from 'zod';
 
-import { Types } from 'mongoose';
+// import { Types } from 'mongoose';
 
-// Custom Mongo ObjectId validation
+// // Custom Mongo ObjectId validation
 
-export const fileUploadSchema = z.object({
-  file: z.any().refine((file) => !!file, {
-    message: 'File is required to upload',
-  }),
-});
+// export const fileUploadSchema = z.object({
+//   file: z.any().refine((file) => !!file, {
+//     message: 'File is required to upload',
+//   }),
+// });
 
-export type FileUploadInput = z.infer<typeof fileUploadSchema>;
+// export type FileUploadInput = z.infer<typeof fileUploadSchema>;

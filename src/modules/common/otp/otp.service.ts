@@ -5,7 +5,7 @@ import { generateOTP, hashOTP, OTP_REDIS_KEYS, verifyOTP } from './utils';
 import { config } from '@/core/config';
 import { CacheService } from '@/core/cache';
 import { logger } from '@/core/logger';
-import { ApiError, toISO } from '@/shared/utils';
+import { ApiError } from '@/shared/utils';
 import { OtpLean } from './otp.model';
 import { EmailService, otpTemplate } from '../email';
 

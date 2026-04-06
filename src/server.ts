@@ -1,13 +1,13 @@
 import http from 'http';
 
-import { app } from '@/app.js';
-
 // import '@queue/queues/notification/notification.worker';
 // import { runSeeds } from '@/core/db/seeds/admin';
+import { config } from '@/core/config';
 import { connectDB } from '@/core/db/connection';
-import { logger } from './core/logger';
-import { config } from './core/config';
+import { logger } from '@/core/logger';
+
 import { initRedis } from './core/cache';
+import { app } from './app';
 
 const PORT = config.app.port;
 // Start server with graceful lifecycle

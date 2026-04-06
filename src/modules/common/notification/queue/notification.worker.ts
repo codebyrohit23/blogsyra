@@ -1,38 +1,38 @@
-import { eventsRedis, workerRedis } from '@queue/connection/redis.connection';
-import { QueueEnum } from '@queue/type';
-import { QueueEvents, Worker } from 'bullmq';
-import { processNotification } from './processor/notification.processer';
+// import { eventsRedis, workerRedis } from '@queue/connection/redis.connection';
+// import { QueueEnum } from '@queue/type';
+// import { QueueEvents, Worker } from 'bullmq';
+// import { processNotification } from './processor/notification.processer';
 
-export const NotificationWorker = new Worker(
-  QueueEnum.NOTIFICATION,
-  async (job) => {
-    await processNotification(job.data.logId);
-  },
-  { connection: workerRedis, concurrency: 20 }
-);
+// export const NotificationWorker = new Worker(
+//   QueueEnum.NOTIFICATION,
+//   async (job) => {
+//     await processNotification(job.data.logId);
+//   },
+//   { connection: workerRedis, concurrency: 20 }
+// );
 
-export const NotificationQueueEvents = new QueueEvents(QueueEnum.NOTIFICATION, {
-  connection: eventsRedis,
-});
-
-// NotificationQueueEvents.on('completed', (job) => {
-//   console.log(`Job ${job} completed successfully.`);
+// export const NotificationQueueEvents = new QueueEvents(QueueEnum.NOTIFICATION, {
+//   connection: eventsRedis,
 // });
 
-// NotificationQueueEvents.on('failed', (job, err) => {
-//   console.error(`Job ${job} failed with error:`, err);
-// });
+// // NotificationQueueEvents.on('completed', (job) => {
+// //   console.log(`Job ${job} completed successfully.`);
+// // });
 
-// NotificationWorker.on('stalled', (job) => {
-//   console.warn(`Job ${job} stalled.`);
-// });
+// // NotificationQueueEvents.on('failed', (job, err) => {
+// //   console.error(`Job ${job} failed with error:`, err);
+// // });
 
-// console.log('🚀 NotificationWorker loaded');
+// // NotificationWorker.on('stalled', (job) => {
+// //   console.warn(`Job ${job} stalled.`);
+// // });
 
-// NotificationWorker.on('ready', () => {
-//   console.log('✅ NotificationWorker READY');
-// });
+// // console.log('🚀 NotificationWorker loaded');
 
-// NotificationWorker.on('error', (err) => {
-//   console.error('❌ Worker error:', err);
-// });
+// // NotificationWorker.on('ready', () => {
+// //   console.log('✅ NotificationWorker READY');
+// // });
+
+// // NotificationWorker.on('error', (err) => {
+// //   console.error('❌ Worker error:', err);
+// // });

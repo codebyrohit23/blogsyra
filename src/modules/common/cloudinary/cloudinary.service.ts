@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import cloudinary from './cloudinary.config';
 import { UploadResult } from './cloudinary.type';
-import { logger } from '@utils/logger';
-import { LogMetadata } from '@/types/index';
+import { logger } from '@/core/logger';
 
 export class CloudinaryService {
   private tempFolder = path.join(process.cwd(), 'uploads', 'temp');
@@ -96,7 +95,7 @@ export class CloudinaryService {
     try {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     } catch (err) {
-      logger.warn(`Failed to delete temp file: ${filePath}`, err as LogMetadata);
+      logger.warn(err, `Failed to delete temp file: ${filePath} : `);
     }
   }
 }

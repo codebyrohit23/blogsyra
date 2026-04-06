@@ -2,37 +2,27 @@
   "compilerOptions": {
     "target": "ES2020",
     "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+
     "outDir": "dist",
     "rootDir": "src",
+
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "baseUrl": "src",
+
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
-      // "@core/*": ["common/core/*"],
-      // "@db/*": ["common/db/*"],
-      // "@errors/*": ["common/errors/*"],
-      // "@utils/*": ["common/utils/*"],
-      // "@middelwares/*": ["common/middelwares/*"],
-      // // common modules
-      // "@token/*": ["modules/common/token/*"],
-      // "@otp/*": ["modules/common/otp/*"],
-      // "@email/*": ["modules/common/email/*"],
-      // "@file/*": ["modules/common/file/*"],
-      // "@cloudinary/*": ["modules/common/cloudinary/*"],
-      // "@notification/*": ["modules/common/notification/*"],
-      // "@queue/*": ["modules/common/queue/*"],
-      // // app modules
-      // "@auth/*": ["modules/app/auth/*"],
-      // "@user/*": ["modules/app/user/*"],
-      // // admin modules
-      // "@admin/*": ["modules/admin/*"],
-      // "@/*": ["*"]
-    }
+      "@/*": ["src/*"]
+    },
+
+    "declaration": false,
+    "sourceMap": true
   },
   "include": ["src", "deleted/config", "deleted/express", "deleted/logger", "deleted/response"],
   "exclude": ["node_modules", "dist"]

@@ -12,7 +12,7 @@ export const loginSchema = z.object({
   deviceId: zTrimmedStringSchema(16, 128, 'Device ID must be between 16 and 128 characters'),
 
   platform: z.nativeEnum(Platform, {
-    invalid_type_error: `Platform must be one of: ${Object.values(Platform).join(', ')}`,
+    error: `Platform must be one of: ${Object.values(Platform).join(', ')}`,
   }),
 
   fcmToken: zTrimmedStringSchema(100, 255, 'FCM token must be a valid Firebase token'),

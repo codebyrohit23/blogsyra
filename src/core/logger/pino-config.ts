@@ -1,12 +1,9 @@
 import { LoggerOptions } from 'pino';
 import { Log_level } from './types';
 import { Environment } from '@/shared/constants';
-import { config } from '../config';
 
 const getLoglevel = () =>
-  config.app.logLevel || config.app.nodeEnv === Environment.DEVELOPEMENT
-    ? Log_level.INFO
-    : Log_level.DEBUG;
+  process.env.NODE_ENV === Environment.DEVELOPEMENT ? Log_level.INFO : Log_level.DEBUG;
 
 export const pinoConfig: LoggerOptions = {
   level: getLoglevel(),
@@ -26,7 +23,7 @@ export const pinoConfig: LoggerOptions = {
   },
 
   transport:
-    config.app.nodeEnv === Environment.PRODUCTION
+    process.env.NODE_ENV === Environment.PRODUCTION
       ? undefined
       : {
           target: 'pino-pretty',
