@@ -9,7 +9,7 @@ export const loginSchema = z
   .object({
     email: emailSchema,
 
-    password: passwordSchema,
+    password: z.string().trim().min(1, 'Password is required'),
 
     type: z.nativeEnum(LoginTYpe).default(LoginTYpe.EMAIL),
 

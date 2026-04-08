@@ -8,7 +8,6 @@ import { authEnvSchema } from './schema/auth.schema';
 import { otpEnvSchema } from './schema/otp.schema';
 import { redisEnvSchema } from './schema/redis.schema';
 import { rateLimitEnvSchema } from './schema/rate-limit.schema';
-import { emailSchema } from './schema/email.schema';
 import { sendGridSchema } from './schema/sendgrid.schema';
 import { cloudinaryEnvSchema } from './schema/cloudinary.schema';
 
@@ -23,7 +22,7 @@ const envSchema = z
   .merge(otpEnvSchema)
   .merge(redisEnvSchema)
   .merge(rateLimitEnvSchema)
-  .merge(emailSchema)
+  // .merge(emailEnvSchema)
   .merge(sendGridSchema)
   .merge(cloudinaryEnvSchema);
 
@@ -35,7 +34,7 @@ z.object({
   ...otpEnvSchema.shape,
   ...redisEnvSchema.shape,
   ...rateLimitEnvSchema.shape,
-  ...emailSchema.shape,
+  // ...emailEnvSchema.shape,
   ...sendGridSchema.shape,
   ...cloudinaryEnvSchema.shape,
 });
