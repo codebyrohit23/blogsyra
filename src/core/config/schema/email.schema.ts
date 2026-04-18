@@ -1,9 +1,7 @@
-import { z } from 'zod';
+// import { z } from 'zod';
 
-export const emailEnvSchema = z.object({
-  EMAIL_FROM: z.string().email('From email address is invalid'),
+// export const emailEnvSchema = z.object({
+//   SEND_GRID_API_KEY: z.string().min(1, 'SEND_GRID_API_KEY is required'),
 
-  EMAIL_APP_PASSWORD: z.string().min(1, 'API key is required'),
-});
-
-export type EmailEnvInput = z.infer<typeof emailEnvSchema>;
+//   EMAIL_FROM: z.string().email('EMAIL_FROM address is invalid'),
+// });

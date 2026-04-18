@@ -8,21 +8,15 @@ import {
 
 import { OtpLean, OtpDocument, OtpModel, Otp } from './otp.model';
 
-import {
-  DeleteResult,
-  FilterQuery,
-  QueryOptions,
-  Types,
-  UpdateQuery,
-  UpdateResult,
-} from 'mongoose';
+import { DeleteResult, FilterQuery, QueryOptions, UpdateQuery, UpdateResult } from 'mongoose';
 import { CreateOtpInput } from './otp.type';
+import { MongoId } from '@/shared/types';
 
 export class OtpRepository {
   constructor(private readonly model = OtpModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<OtpDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<OtpLean | OtpDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -56,7 +50,7 @@ export class OtpRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<OtpLean | null> {
+  deleteById(id: MongoId): Promise<OtpLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
@@ -72,7 +66,7 @@ export class OtpRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<OtpLean | null> {
+  softDelete(id: MongoId): Promise<OtpLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

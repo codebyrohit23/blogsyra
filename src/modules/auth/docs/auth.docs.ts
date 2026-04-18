@@ -11,6 +11,7 @@ import {
   verifyEmailSchema,
   updateMeSchema,
   refreshSchema,
+  socialSocialLoginSchema,
 } from '../schemas';
 
 //
@@ -86,6 +87,15 @@ registerRoute({
   body: loginSchema,
   response: loginResponse,
   summary: 'Login user',
+});
+
+registerRoute({
+  method: HttpMethod.POST,
+  path: '/auth/social-login',
+  tag: 'Auth',
+  body: socialSocialLoginSchema,
+  response: loginResponse,
+  summary: 'Social Login user',
 });
 
 // 5️⃣ FORGOT PASSWORD

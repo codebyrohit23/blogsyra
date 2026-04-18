@@ -39,7 +39,7 @@
 //   // ---------- FIND METHODS ----------
 
 //   async findById(
-//     id: string | Types.ObjectId,
+//     id: string,
 //     projection?: ProjectionType<T>,
 //     options?: QueryOptions,
 //     populate?: PopulateArg,
@@ -124,7 +124,7 @@
 //   }
 
 //   async updateById(
-//     id: string | Types.ObjectId,
+//     id: string,
 //     updateQuery: UpdateQuery<T>,
 //     options: QueryOptions = { new: true },
 //     populate?: PopulateArg
@@ -150,7 +150,7 @@
 //     return this.model.updateMany(query, updateQuery, options);
 //   }
 
-//   async deleteById(id: string | Types.ObjectId): Promise<HydratedDocument<T> | null> {
+//   async deleteById(id: string): Promise<HydratedDocument<T> | null> {
 //     return this.model.findByIdAndDelete(id);
 //   }
 

@@ -9,48 +9,6 @@ import { adminPaginationSchema } from './schemas';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  // login = asyncHandler(async (req: Request, res: Response<ApiResponse<AuthResponse>>) => {
-  //   const { admin, tokensResponse } = await this.adminService.login(req.body);
-
-  //   const cookieMaxAge = config.token.refresh.expiresIn;
-
-  //   res.cookie(REFRESH_TOKEN, tokensResponse.refresh.token, {
-  //     httpOnly: true,
-  //     secure: config.app.nodeEnv === Environment.PRODUCTION,
-  //     sameSite: 'strict',
-  //     maxAge: cookieMaxAge * 1000,
-  //   });
-
-  //   sendResponse(res, {
-  //     statusCode: HttpStatus.OK,
-  //     data: {
-  //       admin: admin,
-  //       token: { access: tokensResponse.access },
-  //     },
-  //   });
-  // });
-
-  // register = asyncHandler(async (req: Request, res: Response<ApiResponse<AuthResponse>>) => {
-  //   const { admin, tokensResponse } = await this.adminService.register(req.body);
-
-  //   const cookieMaxAge = config.token.refresh.expiresIn;
-
-  //   res.cookie(REFRESH_TOKEN, tokensResponse.refresh.token, {
-  //     httpOnly: true,
-  //     secure: config.app.nodeEnv === Environment.PRODUCTION,
-  //     sameSite: 'strict',
-  //     maxAge: cookieMaxAge * 1000,
-  //   });
-
-  //   sendResponse(res, {
-  //     statusCode: HttpStatus.OK,
-  //     data: {
-  //       admin: admin,
-  //       token: { access: tokensResponse.access },
-  //     },
-  //   });
-  // });
-
   getAdmins = asyncHandler(async (req: Request, res: Response<ApiResponse<Array<AdminLean>>>) => {
     const query = adminPaginationSchema.parse(req.query);
 

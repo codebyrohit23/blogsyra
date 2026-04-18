@@ -1,5 +1,7 @@
 export { type LoginDto, loginSchema } from './login.schema';
 
+export { type SocialLoginDto, socialSocialLoginSchema } from './social-login.schema';
+
 export { type RegisterDto, registerSchema } from './register.schema';
 
 export { type ForgotPasswordDto, forgotPasswordSchema } from './forgot-password.schema';

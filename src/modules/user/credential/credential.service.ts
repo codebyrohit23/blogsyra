@@ -1,16 +1,13 @@
-import { CacheService } from '@/core/cache';
 import { CredentialRepository } from './credential.repository';
 import { CreateCredentialInput, UpdateCredentialInput } from './credential.type';
 import { CredentialDocument, CredentialLean } from './credential.model';
 import { ApiError } from '@/shared/utils';
 import { notFoundError } from '@/core/error';
-import { ClientSession, Types } from 'mongoose';
+import { ClientSession } from 'mongoose';
+import { MongoId } from '@/shared/types';
 
 export class CredentialService {
-  constructor(
-    private readonly repo: CredentialRepository,
-    private readonly cache: CacheService
-  ) {}
+  constructor(private readonly repo: CredentialRepository) {}
 
   public async createCredential(
     payload: CreateCredentialInput,
@@ -29,7 +26,7 @@ export class CredentialService {
     return credential;
   }
 
-  public async getCredentialByUserId(userId: Types.ObjectId): Promise<CredentialLean> {
+  public async getCredentialByUserId(userId: MongoId): Promise<CredentialLean> {
     const credential = await this.repo.findOne({ filter: { userId } });
 
     if (!credential) throw notFoundError('Credential');
@@ -38,7 +35,7 @@ export class CredentialService {
   }
 
   public async updateCredentialByUserId(
-    userId: Types.ObjectId,
+    userId: MongoId,
     payload: UpdateCredentialInput
   ): Promise<CredentialLean | null> {
     const credential = await this.repo.updateOne({ userId }, payload);
@@ -46,7 +43,7 @@ export class CredentialService {
     return credential;
   }
 
-  public async deleteCredentialByUserId(userId: Types.ObjectId) {
+  public async deleteCredentialByUserId(userId: MongoId) {
     return this.repo.deleteOne({ userId });
   }
 }

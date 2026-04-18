@@ -1,8 +1,8 @@
 import { Channel, MODELS } from '@/shared/constants';
-import { Types } from 'mongoose';
+import { MongoId } from '@/shared/types';
 
 export interface CreateOtpInput {
-  refId: Types.ObjectId;
+  refId: MongoId;
   refType: OtpRefType;
   purpose: OtpPurpose;
   otpHash: string;
@@ -36,21 +36,15 @@ export const OtpRefType = {
 
 export type OtpRefType = (typeof OtpRefType)[keyof typeof OtpRefType];
 
-export interface EncryptedOTP {
-  encrypted: string;
-  iv: string;
-  tag: string;
-}
-
 export interface ICreateOtp {
-  refId: Types.ObjectId;
+  refId: MongoId;
   refType: OtpRefType;
   purpose: OtpPurpose;
   expiresAt: Date;
 }
 
 export interface IVerifyOtp {
-  refId: Types.ObjectId;
+  refId: MongoId;
   refType: OtpRefType;
   purpose: OtpPurpose;
   code: string;

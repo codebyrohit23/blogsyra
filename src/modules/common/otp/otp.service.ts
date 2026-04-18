@@ -1,27 +1,21 @@
-import { Types } from 'mongoose';
 import { OtpRepository } from './otp.repository';
 import { ICreateOtp, IVerifyOtp, OtpPurpose, OtpRefType, OtpStatus } from './otp.type';
 import { generateOTP, hashOTP, OTP_REDIS_KEYS, verifyOTP } from './utils';
 import { config } from '@/core/config';
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { logger } from '@/core/logger';
 import { ApiError } from '@/shared/utils';
 import { OtpLean } from './otp.model';
-import { EmailService, otpTemplate } from '../email';
+import { emailQueue, otpTemplate } from '../email';
+import { MongoId } from '@/shared/types';
 
 export class OtpService {
   constructor(
     private readonly repo: OtpRepository,
-    private readonly cache: CacheService,
-    private readonly emailService: EmailService
+    private readonly cache: CacheService
   ) {}
 
-  public async sendOtp(
-    refId: Types.ObjectId,
-    email: string,
-    purpose: OtpPurpose,
-    refType: OtpRefType
-  ) {
+  public async sendOtp(refId: MongoId, email: string, purpose: OtpPurpose, refType: OtpRefType) {
     const lastOtp = await this.getOtp(refId, purpose, refType);
 
     const now = Date.now();
@@ -46,7 +40,10 @@ export class OtpService {
     const expiresIn = config.otp.ttl / 60;
 
     const html = otpTemplate({ code: otpCode, expiresIn });
-    await this.emailService.sendEmail({ to: email, subject: 'Your Verification Code', html });
+
+    await emailQueue.sendOtp({ to: email, subject: 'Your Verification Code', html });
+
+    // await this.emailService.sendEmail({ to: email, subject: 'Your Verification Code', html });
     return otpCode;
   }
 
@@ -70,7 +67,7 @@ export class OtpService {
     if (!verifyOTP(code, otpRecord.otpHash)) {
       const updated = await this.incrementAttempts(otpRecord._id);
 
-      const redisKey = OTP_REDIS_KEYS.otp(refId.toString(), purpose, refType);
+      const redisKey = OTP_REDIS_KEYS.otp(refId, purpose, refType);
 
       if (updated && updated.attempts >= config.otp.maxAttempts) {
         await Promise.all([
@@ -85,7 +82,7 @@ export class OtpService {
       throw new ApiError('Invalid or expired OTP');
     }
 
-    const redisKey = OTP_REDIS_KEYS.otp(refId.toString(), purpose, refType);
+    const redisKey = OTP_REDIS_KEYS.otp(refId, purpose, refType);
 
     await Promise.all([
       this.repo.updateOne({ _id: otpRecord._id }, { status: OtpStatus.VERIFIED }),
@@ -94,11 +91,11 @@ export class OtpService {
   }
 
   private async getOtp(
-    refId: Types.ObjectId,
+    refId: MongoId,
     purpose: OtpPurpose,
     refType: OtpRefType
   ): Promise<OtpLean | null> {
-    const redisKey = OTP_REDIS_KEYS.otp(refId.toString(), purpose, refType);
+    const redisKey = OTP_REDIS_KEYS.otp(refId, purpose, refType);
 
     const cached = await this.cache.get<OtpLean>(redisKey);
 
@@ -131,7 +128,7 @@ export class OtpService {
 
     const otp = await this.repo.create({ ...payload, otpHash });
 
-    const redisKey = OTP_REDIS_KEYS.otp(payload.refId.toString(), payload.purpose, payload.refType);
+    const redisKey = OTP_REDIS_KEYS.otp(payload.refId, payload.purpose, payload.refType);
 
     const ttl = Math.max(0, Math.floor((otp.expiresAt.getTime() - Date.now()) / 1000));
 
@@ -142,7 +139,7 @@ export class OtpService {
     return otpCode;
   }
 
-  private async incrementAttempts(id: Types.ObjectId): Promise<OtpLean | null> {
+  private async incrementAttempts(id: MongoId): Promise<OtpLean | null> {
     return this.repo.updateOne(
       { _id: id, attempts: { $lt: config.otp.maxAttempts } },
       { $inc: { attempts: 1 } }

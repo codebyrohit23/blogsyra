@@ -1,44 +1,35 @@
-import { config } from '@/core/config';
-import { logger } from '@/core/logger';
-import mongoose, { Connection } from 'mongoose';
+// import { config } from '@/core/config';
+// import { logger } from '@/core/logger';
+// import mongoose, { Connection } from 'mongoose';
 
-let connection: Connection;
+// let connection: Connection;
 
-// export const connectDB = async (): Promise<void> => {
+// export const connectDB = async (): Promise<Connection> => {
 //   try {
-//     await mongoose.connect(config.db.mongoUri);
+//     const conn = await mongoose.connect(config.db.mongoUri);
+//     connection = conn.connection;
+
+//     logger.info('✅ MongoDB connected');
+
+//     return connection;
 //   } catch (error) {
-//     logger.error(error, '❌ Database connection error:');
+//     logger.error(error);
+//     console.log(error);
 //     process.exit(1);
 //   }
 // };
 
-export const connectDB = async (): Promise<Connection> => {
-  try {
-    const conn = await mongoose.connect(config.db.mongoUri);
-    connection = conn.connection;
+// export const getConnection = (): Connection => {
+//   if (!connection) {
+//     throw new Error('Database not connected');
+//   }
+//   return connection;
+// };
 
-    logger.info('✅ MongoDB connected');
-
-    return connection;
-  } catch (error) {
-    logger.error(error);
-    console.log(error);
-    process.exit(1);
-  }
-};
-
-export const getConnection = (): Connection => {
-  if (!connection) {
-    throw new Error('Database not connected');
-  }
-  return connection;
-};
-
-export const disConnectDB = async (): Promise<void> => {
-  try {
-    await mongoose.disconnect();
-  } catch (error) {
-    logger.error(error, 'Error while disconnecting DB:');
-  }
-};
+// export const disConnectDB = async (): Promise<void> => {
+//   try {
+//     await mongoose.disconnect();
+//   } catch (error) {
+//     logger.error(error, 'Error while disconnecting DB:');
+//   }
+// };

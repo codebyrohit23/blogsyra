@@ -105,7 +105,7 @@
 //     return file;
 //   };
 
-//   deleteFile = async (id: string | Types.ObjectId): Promise<FileDocument> => {
+//   deleteFile = async (id: string): Promise<FileDocument> => {
 //     const file = await this.deleteById(id);
 //     if (!file) throw notFoundError('File');
 //     await cloudinaryService.deleteFile(file.key);

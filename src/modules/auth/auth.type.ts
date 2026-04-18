@@ -1,12 +1,10 @@
-import { TokenResult } from '@/modules/common/auth';
-import { UserDocument } from '../user';
-import { Identity } from '../user/identity/identity.model';
+import { IdentityLean, UserDocument } from '../user';
 
 export enum LoginTYpe {
   EMAIL = 'email',
   PHONE = 'phone',
-  GOOGLE = 'google',
-  APPLE = 'apple',
+  // GOOGLE = 'google',
+  // APPLE = 'apple',
 }
 
 export interface AuthTokenResponse {
@@ -16,12 +14,12 @@ export interface AuthTokenResponse {
 
 export interface UserIAndIdentity {
   user: Partial<UserDocument>;
-  identity: Partial<Identity>;
+  identity: Partial<IdentityLean> | null;
 }
 
 export interface AuthResponse {
   user: Partial<UserDocument>;
-  identity: Partial<Identity>;
+  identity: Partial<IdentityLean> | null;
   token: AuthTokenResponse;
 }
 

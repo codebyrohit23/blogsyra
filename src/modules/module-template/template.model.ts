@@ -25,8 +25,8 @@ export const TemplateModel = model(MODELS.TEMPLATE, TemplateSchema);
 
 export type Template = InferSchemaType<typeof TemplateSchema>;
 
-export type CreateTemplateInput = Omit<Template, 'status' | 'createdAt' | 'updatedAt'>;
-export type UpdateTemplateInput = Partial<Omit<Template, 'createdAt' | 'updatedAt'>>;
+// export type CreateTemplateInput = Omit<Template, 'status' | 'createdAt' | 'updatedAt'>;
+// export type UpdateTemplateInput = Partial<Omit<Template, 'createdAt' | 'updatedAt'>>;
 
 export type TemplateDocument = HydratedDocument<Template>;
 export type TemplateLean = { _id: Types.ObjectId } & Template;

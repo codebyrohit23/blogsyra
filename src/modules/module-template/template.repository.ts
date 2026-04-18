@@ -6,28 +6,16 @@ import {
   PaginationInput,
 } from '@/core/db/toolkit';
 
-import {
-  TemplateLean,
-  TemplateDocument,
-  TemplateModel,
-  Template,
-  CreateTemplateInput,
-  UpdateTemplateInput,
-} from './template.model';
-import {
-  DeleteResult,
-  FilterQuery,
-  QueryOptions,
-  Types,
-  UpdateQuery,
-  UpdateResult,
-} from 'mongoose';
+import { TemplateLean, TemplateDocument, TemplateModel, Template } from './template.model';
+import { DeleteResult, FilterQuery, QueryOptions, UpdateQuery, UpdateResult } from 'mongoose';
+import { MongoId } from '@/shared/types';
+import { CreateTemplateInput, UpdateTemplateInput } from './template.type';
 
 export class TemplateRepository {
   constructor(private readonly model = TemplateModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<TemplateDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<TemplateLean | TemplateDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -61,12 +49,12 @@ export class TemplateRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<TemplateLean | null> {
+  deleteById(id: MongoId): Promise<TemplateLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
   deleteOne(filter: FilterQuery<Template>): Promise<TemplateLean | null> {
-    return this.model.findOneAndUpdate(filter).lean();
+    return this.model.findOneAndDelete(filter).lean();
   }
 
   deleteMany(filter: FilterQuery<Template>): Promise<DeleteResult> {
@@ -77,7 +65,7 @@ export class TemplateRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<TemplateLean | null> {
+  softDelete(id: MongoId): Promise<TemplateLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

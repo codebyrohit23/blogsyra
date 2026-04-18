@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { ApiResponse } from '@/shared/types';
 import { AuthResponse } from './auth.type';
 import { config } from '@/core/config';
-import { Environment, HttpStatus, REFRESH_TOKEN } from '@/shared/constants';
+import { Environment, HttpStatus, REDIS_TTL, REFRESH_TOKEN } from '@/shared/constants';
 import { missingTokenError } from '@/core/error';
 import { AdminLean } from '../admins';
 
@@ -15,7 +15,7 @@ export class AuthController {
   login = asyncHandler(async (req: Request, res: Response<ApiResponse<AuthResponse>>) => {
     const { admin, tokensResponse } = await this.adminAuthService.login(req.body);
 
-    const cookieMaxAge = config.token.refresh.expiresIn;
+    const cookieMaxAge = REDIS_TTL.REFRESH_TOKEN;
 
     res.cookie(REFRESH_TOKEN, tokensResponse.refresh.token, {
       httpOnly: true,
@@ -36,7 +36,7 @@ export class AuthController {
   register = asyncHandler(async (req: Request, res: Response<ApiResponse<AuthResponse>>) => {
     const { admin, tokensResponse } = await this.adminAuthService.register(req.body);
 
-    const cookieMaxAge = config.token.refresh.expiresIn;
+    const cookieMaxAge = config.auth.token.refresh.expiresIn;
 
     res.cookie(REFRESH_TOKEN, tokensResponse.refresh.token, {
       httpOnly: true,
@@ -91,7 +91,7 @@ export class AuthController {
 
     const response = await this.adminAuthService.refresh(refreshToken);
 
-    const cookieMaxAge = config.token.refresh.expiresIn;
+    const cookieMaxAge = config.auth.token.refresh.expiresIn;
 
     res.cookie(REFRESH_TOKEN, response.refresh.token, {
       httpOnly: true,

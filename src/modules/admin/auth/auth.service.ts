@@ -12,7 +12,7 @@ import { AuthService, AuthTokenPairResponse, TokenType } from '@/modules/common/
 import { LoginResponse } from './auth.type';
 import { buildAdminResponse, validateAccountStatus } from './helpers';
 import { invalidCredentialError, jwtInvalidError, missingTokenError } from '@/core/error';
-import { AccountStatus, HttpStatus, Role } from '@/shared/constants';
+import { HttpStatus, Role } from '@/shared/constants';
 import { ApiError, comparePassword, hashPassword } from '@/shared/utils';
 import { OtpPurpose, OtpRefType, OtpService } from '@/modules/common/otp';
 import { logger } from '@/core/logger';

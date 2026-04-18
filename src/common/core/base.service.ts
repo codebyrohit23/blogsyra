@@ -35,7 +35,7 @@
 
 //   // ---------- FIND METHODS ----------
 //   async findById(
-//     id: string | Types.ObjectId,
+//     id: string,
 //     options?: ServiceOptions<T>
 //   ): Promise<HydratedDocument<T> | null> {
 //     return this.repository.findById(
@@ -103,7 +103,7 @@
 //   }
 
 //   async updateById(
-//     id: string | Types.ObjectId,
+//     id: string,
 //     updateQuery: UpdateQuery<T>,
 //     options?: ServiceOptions<T>
 //   ): Promise<HydratedDocument<T> | null> {
@@ -123,7 +123,7 @@
 //     return this.repository.updateMany(query, updateQuery, options || {});
 //   }
 
-//   async deleteById(id: string | Types.ObjectId): Promise<HydratedDocument<T> | null> {
+//   async deleteById(id: string): Promise<HydratedDocument<T> | null> {
 //     return this.repository.deleteById(id);
 //   }
 

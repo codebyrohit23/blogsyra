@@ -55,7 +55,7 @@
 //     return this.model.updateMany(filter, update);
 //   }
 
-//   deleteById(id: string | Types.ObjectId): Promise<ProfileLean | null> {
+//   deleteById(id: string): Promise<ProfileLean | null> {
 //     return this.model.findByIdAndDelete(id).lean();
 //   }
 

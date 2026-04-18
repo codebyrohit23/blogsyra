@@ -38,6 +38,12 @@ export enum Role {
   ADMIN = 'admin',
   USER = 'user',
 }
+
+export enum AuthProvider {
+  APPLE = 'apple',
+  GOOGLE = 'google',
+}
+
 export enum Platform {
   IOS = 'ios',
   ANDROID = 'android',

@@ -1,4 +1,4 @@
-import { buildKey } from '@/core/cache';
+import { buildKey } from '@/infra/cache';
 import { TemplatePaginationDto } from './schemas';
 
 export const TEMPLATE_REDIS_KEYS = {

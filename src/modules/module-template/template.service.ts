@@ -1,23 +1,29 @@
 import { PaginationResult } from '@/core/db/toolkit';
 import { CreateTemplateDto, TemplatePaginationDto, UpdateTemplateDto } from './schemas';
 import { TemplateRepository } from './template.repository';
-import { convertToObjectId } from '@/shared/utils';
 import { notFoundError } from '@/core/error';
 import { TemplateDocument, TemplateLean } from './template.model';
-import { TEMPLATE_REDIS_KEYS } from './template.redis-keys';
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { SortOrder } from '@/shared/constants';
+import { MongoId } from '@/shared/types';
+import { buildQueryKey, TemplateCacheKeys, TemplateCacheVersion } from './template.cache';
 
 export class TemplateService {
   constructor(
     private readonly repo: TemplateRepository,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
+    private readonly templateCacheVersion: TemplateCacheVersion
   ) {}
 
   public async getTemplates(query: TemplatePaginationDto): Promise<PaginationResult<TemplateLean>> {
-    const redisKey = TEMPLATE_REDIS_KEYS.templatesList(query);
+    const version = await this.templateCacheVersion.getListVersion();
 
-    const cached = await this.cache.get<PaginationResult<TemplateLean>>(redisKey);
+    const queryKey = buildQueryKey(query);
+
+    const cacheKey = TemplateCacheKeys.list(queryKey, version);
+
+    const cached = await this.cache.get<PaginationResult<TemplateLean>>(cacheKey);
+
     if (cached) return cached;
 
     const { page, limit, search, status, sortBy, sortOrder } = query;
@@ -47,28 +53,27 @@ export class TemplateService {
     });
 
     if (result) {
-      await this.cache.set(redisKey, result);
+      await this.cache.set(cacheKey, result);
     }
 
     return result;
   }
 
-  public async createTemplate(payload: CreateTemplateDto, id: string): Promise<TemplateDocument> {
-    const createdBy = convertToObjectId(id);
-
+  public async createTemplate(
+    payload: CreateTemplateDto,
+    createdBy: MongoId
+  ): Promise<TemplateDocument> {
     const template = await this.repo.create({ ...payload, createdBy });
 
-    const redisKey = TEMPLATE_REDIS_KEYS.patterns.templatesList();
-
-    await this.cache.deleteByPattern(redisKey);
+    await this.templateCacheVersion.bumpListVersion();
 
     return template;
   }
 
-  public async getTemplate(id: string): Promise<TemplateLean> {
-    const redisKey = TEMPLATE_REDIS_KEYS.templateById(id);
+  public async getTemplate(id: MongoId): Promise<TemplateLean> {
+    const cacheKey = TemplateCacheKeys.byId(id);
 
-    const cached = await this.cache.get<TemplateLean>(redisKey);
+    const cached = await this.cache.get<TemplateLean>(cacheKey);
 
     if (cached) return cached;
 
@@ -76,31 +81,33 @@ export class TemplateService {
 
     if (!template) throw notFoundError('Template');
 
-    await this.cache.set(redisKey, template);
+    await this.cache.set(cacheKey, template);
 
     return template;
   }
 
-  public async updateTemplate(payload: UpdateTemplateDto, id: string): Promise<TemplateLean> {
+  public async updateTemplate(id: MongoId, payload: UpdateTemplateDto): Promise<TemplateLean> {
     const template = await this.repo.updateOne({ _id: id }, payload);
 
     if (!template) throw notFoundError('Template');
 
-    const redisPattern = TEMPLATE_REDIS_KEYS.patterns.all();
-
-    await this.cache.deleteByPattern(redisPattern);
+    await Promise.all([
+      this.cache.del(TemplateCacheKeys.byId(id)),
+      this.templateCacheVersion.bumpListVersion(),
+    ]);
 
     return template;
   }
 
-  public async deleteTemplate(id: string) {
+  public async deleteTemplate(id: MongoId) {
     const template = await this.repo.deleteById(id);
 
     if (!template) throw notFoundError('Template');
 
-    const redisPattern = TEMPLATE_REDIS_KEYS.patterns.all();
-
-    await this.cache.deleteByPattern(redisPattern);
+    await Promise.all([
+      this.cache.del(TemplateCacheKeys.byId(id)),
+      this.templateCacheVersion.bumpListVersion(),
+    ]);
 
     return template;
   }

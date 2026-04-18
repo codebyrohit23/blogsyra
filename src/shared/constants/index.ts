@@ -3,6 +3,7 @@ export {
   HttpMethod,
   HttpStatus,
   Role,
+  AuthProvider,
   Platform,
   Channel,
   ValidationSource,
@@ -16,4 +17,4 @@ export {
 
 export { MODELS } from './model-names';
 
-export { DEFAULT_TIMEZONE, DEFAULT_LANGUAGE, REFRESH_TOKEN } from './constants';
+export { DEFAULT_TIMEZONE, DEFAULT_LANGUAGE, REFRESH_TOKEN, SALT_ROUNDS } from './constants';

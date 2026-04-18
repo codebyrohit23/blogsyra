@@ -3,18 +3,16 @@ import http from 'http';
 // import '@queue/queues/notification/notification.worker';
 // import { runSeeds } from '@/core/db/seeds/admin';
 import { config } from '@/core/config';
-import { connectDB } from '@/core/db/connection';
 import { logger } from '@/core/logger';
 
-import { initRedis } from './core/cache';
+import { initRedis } from './infra/cache';
 import { app } from './app';
+import { connectDB } from './infra/db/mongo';
 
 const PORT = config.app.port;
-// Start server with graceful lifecycle
+
 const start = async () => {
   try {
-    // Connect to DB first
-    // await runSeeds();
     await connectDB();
 
     logger.info('✅  Databse  connected');
@@ -24,9 +22,7 @@ const start = async () => {
     await initRedis();
 
     server.listen(PORT, () => {
-      logger.info(
-        `🚀 ${config.app.appName || 'app'} listening on port ${PORT} ${config.app.nodeEnv}`
-      );
+      logger.info(`${config.app.appName || 'app'} listening on port ${PORT} ${config.app.nodeEnv}`);
     });
 
     // Handle unhandled promise rejections

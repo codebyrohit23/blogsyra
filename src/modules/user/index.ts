@@ -1,7 +1,10 @@
-export { UserService } from './core/user.service';
-export { CredentialService } from './credential/credential.service';
-export { IdentityService } from './identity/identity.service';
+export { UserService } from './core';
+export { CredentialService } from './credential';
+export { IdentityService } from './identity';
+export { ProviderService } from './provider';
 
-export { userService, credentialService, identityService } from './user.module';
+export { userService, credentialService, identityService, providerService } from './user.module';
 
-export type { UserDocument, UserLean } from './core/user.model';
+export type { UserDocument, UserLean } from './core';
+
+export type { IdentityLean } from './identity';

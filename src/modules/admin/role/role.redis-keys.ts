@@ -1,4 +1,4 @@
-import { buildKey } from '@/core/cache';
+import { buildKey } from '@/infra/cache';
 import { RolePaginationDto } from './schemas';
 
 export const ROLE_REDIS_KEYS = {

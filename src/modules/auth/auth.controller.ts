@@ -4,8 +4,7 @@ import { UserAuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { SuccessResponse } from '@/shared/types';
 import { AuthResponse, AuthTokenResponse, UserIAndIdentity, VerifyOtpResponse } from './auth.type';
-import { config } from '@/core/config';
-import { Environment, HttpStatus, REFRESH_TOKEN } from '@/shared/constants';
+import { HttpStatus } from '@/shared/constants';
 import { missingTokenError } from '@/core/error';
 import { UserLean } from '../user';
 
@@ -51,6 +50,15 @@ export class AuthController {
     });
   });
 
+  socialLogin = asyncHandler(async (req: Request, res: Response<SuccessResponse<AuthResponse>>) => {
+    const response = await this.userAuthService.socialLogin(req.body);
+
+    sendSuccess(res, {
+      statusCode: HttpStatus.OK,
+      data: response,
+    });
+  });
+
   forgotPassword = asyncHandler(async (req: Request, res: Response<SuccessResponse>) => {
     await this.userAuthService.forgotPassword(req.body);
 
@@ -82,7 +90,6 @@ export class AuthController {
 
   // AUTH REQUIRED
   getMe = asyncHandler(async (req: Request, res: Response<SuccessResponse<UserIAndIdentity>>) => {
-    console.log(req.user.sub);
     const user = await this.userAuthService.getMe(req.user.sub);
 
     sendSuccess(res, {

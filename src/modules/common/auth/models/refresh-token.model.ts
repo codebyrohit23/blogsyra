@@ -45,8 +45,5 @@ export const RefreshTokenModel = mongoose.model(MODELS.COMMON.REFRESH_TOKEN, Ref
 
 export type RefreshToken = InferSchemaType<typeof RefreshTokenSchema>;
 
-// export type CreateRefreshTokenInput = Omit<RefreshToken, 'status' | 'createdAt' | 'updatedAt'>;
-// export type UpdateRefreshTokenInput = Partial<RefreshToken>;
-
 export type RefreshTokenDocument = HydratedDocument<RefreshToken>;
 export type RefreshTokenLean = { _id: Types.ObjectId } & RefreshToken;

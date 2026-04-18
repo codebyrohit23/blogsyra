@@ -1,4 +1,4 @@
-import { buildKey } from '@/core/cache';
+import { buildKey } from '@/infra/cache';
 import { PermissionPaginationDto } from './schemas';
 
 export const PERMISSION_REDIS_KEYS = {

@@ -8,22 +8,16 @@ import {
 
 import { RefreshTokenLean, RefreshTokenDocument, RefreshTokenModel, RefreshToken } from '../models';
 
-import {
-  DeleteResult,
-  FilterQuery,
-  QueryOptions,
-  Types,
-  UpdateQuery,
-  UpdateResult,
-} from 'mongoose';
+import { DeleteResult, FilterQuery, QueryOptions, UpdateQuery, UpdateResult } from 'mongoose';
 
 import { CreateRefreshTokenInput } from '../types';
+import { MongoId } from '@/shared/types';
 
 export class RefreshTokenRepository {
   constructor(private readonly model = RefreshTokenModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<RefreshTokenDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<RefreshTokenLean | RefreshTokenDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -60,7 +54,7 @@ export class RefreshTokenRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: Types.ObjectId): Promise<RefreshTokenLean | null> {
+  deleteById(id: MongoId): Promise<RefreshTokenLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
@@ -76,7 +70,7 @@ export class RefreshTokenRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<RefreshTokenLean | null> {
+  softDelete(id: MongoId): Promise<RefreshTokenLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

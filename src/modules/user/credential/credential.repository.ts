@@ -17,17 +17,17 @@ import {
   DeleteResult,
   FilterQuery,
   QueryOptions,
-  Types,
   UpdateQuery,
   UpdateResult,
 } from 'mongoose';
 import { CreateCredentialInput } from './credential.type';
+import { MongoId } from '@/shared/types';
 
 export class CredentialRepository {
   constructor(private readonly model = CredentialModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<CredentialDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<CredentialLean | CredentialDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -65,7 +65,7 @@ export class CredentialRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<CredentialLean | null> {
+  deleteById(id: MongoId): Promise<CredentialLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
@@ -81,7 +81,7 @@ export class CredentialRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<CredentialLean | null> {
+  softDelete(id: MongoId): Promise<CredentialLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

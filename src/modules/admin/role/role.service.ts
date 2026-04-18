@@ -1,7 +1,7 @@
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { RoleRepository } from './role.repository';
 import { RoleDocument, RoleLean } from './role.model';
-import { ApiError, convertToObjectId } from '@/shared/utils';
+import { ApiError } from '@/shared/utils';
 import { EntityStatus, HttpStatus, SortOrder } from '@/shared/constants';
 import { ROLE_REDIS_KEYS } from './role.redis-keys';
 import { notFoundError } from '@/core/error';
@@ -60,9 +60,7 @@ export class RoleService {
 
     if (exist) new ApiError(`Role already exists with name ${name}`, HttpStatus.BAD_REQUEST);
 
-    const permissions = payload?.permissions?.map((id) => convertToObjectId(id));
-
-    const role = await this.repo.create({ ...payload, permissions });
+    const role = await this.repo.create(payload);
 
     const redisKey = ROLE_REDIS_KEYS.patterns.rolesList();
 
@@ -72,7 +70,7 @@ export class RoleService {
   }
 
   public async getRole(id: string): Promise<RoleLean> {
-    const filter = { _id: convertToObjectId(id), status: EntityStatus.ACTIVE };
+    const filter = { _id: id, status: EntityStatus.ACTIVE };
 
     const populate = {
       path: 'permissions',

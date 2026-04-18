@@ -45,7 +45,7 @@ export class TemplateController {
   });
 
   updateTemplate = asyncHandler(async (req: Request, res: Response<ApiResponse<TemplateLean>>) => {
-    const template = await this.templateService.updateTemplate(req.body, req.params.id);
+    const template = await this.templateService.updateTemplate(req.params.id, req.body);
 
     sendResponse(res, {
       statusCode: HttpStatus.OK,

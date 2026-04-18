@@ -78,8 +78,5 @@ export const SessionModel = mongoose.model(MODELS.COMMON.SESSION, SessionSchema)
 
 export type Session = InferSchemaType<typeof SessionSchema>;
 
-// export type CreateSessionInput = Omit<Session, 'status' | 'createdAt' | 'updatedAt'>;
-// export type UpdateSessionInput = Partial<Session>;
-
 export type SessionDocument = HydratedDocument<Session>;
 export type SessionLean = { _id: Types.ObjectId } & Session;

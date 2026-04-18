@@ -1,16 +1,17 @@
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { UserRepository } from './user.repository';
 import { CreateUserInput, UpdateUserInput } from './user.type';
 import { UserDocument, UserLean } from './user.model';
-import { USER_REDIS_KEYS } from './user.redis-keys';
 import { notFoundError } from '@/core/error';
 import { ClientSession } from 'mongoose';
-import { convertToObjectId } from '@/shared/utils';
+import { UserCacheKeys, UserCacheVersion } from './user.cache';
+import { MongoId } from '@/shared/types';
 
 export class UserService {
   constructor(
     private readonly repo: UserRepository,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
+    private readonly userCacheVersion: UserCacheVersion
   ) {}
 
   //   public async getUsers(query: UserPaginationDto): Promise<PaginationResult<UserLean>> {
@@ -56,57 +57,36 @@ export class UserService {
     payload: CreateUserInput,
     session?: ClientSession
   ): Promise<UserDocument> {
-    // const { userName } = payload;
-
-    // if (userName) {
-    //   const exists = await this.repo.exists({ userName });
-
-    //   if (exists) {
-    //     throw new ApiError('Username is already taken. Please choose a different one.');
-    //   }
-    // }
-
     const user = await this.repo.create(payload, session);
 
-    const redisKey = USER_REDIS_KEYS.patterns.usersList();
-
-    await this.cache.deleteByPattern(redisKey);
+    await this.userCacheVersion.bumpListVersion();
 
     return user;
   }
 
-  public async getUserById(id: string): Promise<UserLean | null> {
-    const redisKey = USER_REDIS_KEYS.userById(id);
+  public async getUserById(id: MongoId): Promise<UserLean | null> {
+    const cacheKey = UserCacheKeys.byId(id.toString());
 
-    const cached = await this.cache.get<UserLean>(redisKey);
+    const cached = await this.cache.get<UserLean>(cacheKey);
 
     if (cached) return cached;
 
     const user = await this.repo.findById(id);
 
-    await this.cache.set(redisKey, user);
+    await this.cache.set(cacheKey, user);
 
     return user;
   }
 
-  public async updateUser(id: string, payload: UpdateUserInput): Promise<UserLean> {
-    // const { userName } = payload;
-
-    // if (userName) {
-    //   const exists = await this.repo.exists({ _id: { $ne: convertToObjectId(id) }, userName });
-
-    //   if (exists) {
-    //     throw new ApiError('Username is already taken. Please choose a different one.');
-    //   }
-    // }
-
-    const user = await this.repo.updateOne({ _id: convertToObjectId(id) }, payload);
+  public async updateUser(id: MongoId, payload: UpdateUserInput): Promise<UserLean> {
+    const user = await this.repo.updateOne({ _id: id }, payload);
 
     if (!user) throw notFoundError('User');
 
-    const redisPattern = USER_REDIS_KEYS.patterns.all();
-
-    await this.cache.deleteByPattern(redisPattern);
+    await Promise.all([
+      this.cache.del(UserCacheKeys.byId(id)),
+      this.userCacheVersion.bumpListVersion(),
+    ]);
 
     return user;
   }
@@ -116,9 +96,10 @@ export class UserService {
 
     if (!user) throw notFoundError('User');
 
-    const redisPattern = USER_REDIS_KEYS.patterns.all();
-
-    await this.cache.deleteByPattern(redisPattern);
+    await Promise.all([
+      this.cache.del(UserCacheKeys.byId(id)),
+      this.userCacheVersion.bumpListVersion(),
+    ]);
 
     return user;
   }

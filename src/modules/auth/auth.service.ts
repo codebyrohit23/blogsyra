@@ -5,22 +5,35 @@ import {
   RefreshDto,
   RegisterDto,
   ResetPasswordDto,
+  SocialLoginDto,
   UpdateMeDto,
   VerifyEmailDto,
   VerifyOtpDto,
 } from './schemas';
 
-import { AuthService, AuthTokenPairResponse, TokenType } from '@/modules/common/auth';
+import { AuthService, TokenType } from '@/modules/common/auth';
 import { AuthResponse, AuthTokenResponse, UserIAndIdentity } from './auth.type';
 import { validateAccountStatus } from './helpers';
 import { invalidCredentialError, jwtInvalidError, missingTokenError } from '@/core/error';
-import { HttpStatus, Role } from '@/shared/constants';
-import { ApiError, comparePassword, convertToObjectId, hashPassword } from '@/shared/utils';
+import { AuthProvider, HttpStatus, Role } from '@/shared/constants';
+import { ApiError, comparePassword, hashPassword } from '@/shared/utils';
 import { OtpPurpose, OtpRefType, OtpService } from '@/modules/common/otp';
 import { logger } from '@/core/logger';
-import { CredentialService, IdentityService, UserLean, UserService } from '../user';
+
+import {
+  CredentialService,
+  IdentityLean,
+  IdentityService,
+  ProviderService,
+  UserLean,
+  UserService,
+} from '../user';
+
 import { withTransaction } from '@/core/db/toolkit';
-import { getConnection } from '@/core/db/connection';
+import { getConnection } from '@/infra/db/mongo';
+import { MongoId } from '@/shared/types';
+import { GoogleProvider } from '@/infra/oauth/google.provider';
+import { IdTokenPayload } from '@/infra/oauth';
 
 export class UserAuthService {
   constructor(
@@ -28,6 +41,8 @@ export class UserAuthService {
     private readonly userService: UserService,
     private readonly credentialService: CredentialService,
     private readonly identityService: IdentityService,
+    private readonly providerService: ProviderService,
+    private readonly googleProvider: GoogleProvider,
     private readonly otpService: OtpService
   ) {}
 
@@ -78,14 +93,14 @@ export class UserAuthService {
 
     await this.otpService.verifyOtp(otpPayload);
 
-    return this.getTokenByPurpose(identity.userId.toString(), payload.purpose);
+    return this.getTokenByPurpose(identity.userId, payload.purpose);
   }
 
-  private async getTokenByPurpose(userId: string, purpose: OtpPurpose): Promise<string> {
+  private async getTokenByPurpose(userId: MongoId, purpose: OtpPurpose): Promise<string> {
     switch (purpose) {
       case OtpPurpose.VERIFY_EMAIL: {
         const tokenResponse = await this.authService.getEmailVerificationToken({
-          id: userId.toString(),
+          id: userId,
           role: Role.USER,
         });
         return tokenResponse.token;
@@ -93,7 +108,7 @@ export class UserAuthService {
 
       case OtpPurpose.RESET_PASSWORD: {
         const tokenResponse = await this.authService.getResetPasswordToken({
-          id: userId.toString(),
+          id: userId,
           role: Role.USER,
         });
         return tokenResponse.token;
@@ -110,16 +125,16 @@ export class UserAuthService {
       TokenType.EMAIL_VERIFICATION
     );
 
-    const connection = getConnection();
-
     const exists = await this.userService.getUserById(tokenResponse.sub);
 
-    if (!exists) throw jwtInvalidError();
+    if (!exists) throw new ApiError('First verify your email address');
+
+    const connection = getConnection();
 
     const userId = exists._id;
 
     const { user, identity } = await withTransaction(connection, async (session) => {
-      const user = await this.userService.updateUser(userId.toString(), payload);
+      const user = await this.userService.updateUser(userId, payload);
 
       const passwordHash = await hashPassword(payload.password);
 
@@ -137,6 +152,8 @@ export class UserAuthService {
       return { user, credential, identity };
     });
 
+    if (!identity) throw new ApiError('Please verify your email first');
+
     const { token } = await this.authService.createSessionAndIssueTokens({
       id: user._id,
       role: Role.USER,
@@ -146,7 +163,7 @@ export class UserAuthService {
       timezone: payload.timeZone,
     });
 
-    if (!identity) throw new ApiError('Please verify your email first');
+    await this.authService.revokeToken(tokenResponse.jti);
 
     return {
       user,
@@ -171,7 +188,7 @@ export class UserAuthService {
       throw invalidCredentialError();
     }
 
-    const user = await this.userService.getUserById(identity.userId.toString());
+    const user = await this.userService.getUserById(identity.userId);
 
     if (!user) throw invalidCredentialError();
 
@@ -196,6 +213,102 @@ export class UserAuthService {
     };
   }
 
+  public async socialLogin(payload: SocialLoginDto): Promise<AuthResponse> {
+    const tokenPaylod = await this.verifySocialIdToken(payload.provider, payload.idToken);
+
+    if (!tokenPaylod) {
+      throw new ApiError('Invalid auth token', HttpStatus.UNAUTHORIZED);
+    }
+
+    return this.handleSocialLogin(payload, tokenPaylod);
+  }
+
+  private async handleSocialLogin(
+    payload: SocialLoginDto,
+    idTokenPayload: IdTokenPayload
+  ): Promise<AuthResponse> {
+    const { email, sub, name, picture } = idTokenPayload;
+    const { provider } = payload;
+
+    let userProvider = await this.providerService.getProvider(provider, sub);
+
+    let identity = email ? await this.identityService.getIdentityByEmail(email) : null;
+
+    if (!userProvider && !identity) {
+      const connection = getConnection();
+
+      userProvider = await withTransaction(connection, async (session) => {
+        const user = await this.userService.createUser({ name, avatar: picture }, session);
+
+        const userProvider = await this.providerService.createProvider(
+          {
+            userId: user._id,
+            provider,
+            providerId: sub,
+          },
+          session
+        );
+
+        if (email) {
+          await this.identityService.createUserIdentity(
+            { userId: user._id, email, emailVerified: true },
+            session
+          );
+        }
+
+        return userProvider;
+      });
+    } else if (!userProvider && identity) {
+      userProvider = await this.providerService.createProvider({
+        userId: identity.userId,
+        provider,
+        providerId: sub,
+      });
+    }
+
+    if (!userProvider) {
+      throw new ApiError('Faled to login');
+    }
+
+    const user = await this.userService.getUserById(userProvider.userId);
+
+    if (!user) {
+      throw new ApiError('Faled to login');
+    }
+
+    if (!identity) {
+      identity = await this.identityService.getIdentityByUserId(userProvider.userId);
+    }
+
+    const { token } = await this.authService.createSessionAndIssueTokens({
+      id: user._id,
+      role: Role.USER,
+      platform: payload.platform,
+      deviceId: payload.deviceId,
+      fcmToken: payload.fcmToken,
+      timezone: payload.timeZone,
+    });
+
+    return {
+      user,
+      identity: identity,
+      token: {
+        accessToken: token.access.token,
+        refreshToken: token.refresh.token,
+      },
+    };
+  }
+
+  private async verifySocialIdToken(provider: AuthProvider, idToken: string) {
+    switch (provider) {
+      case AuthProvider.GOOGLE:
+        return this.googleProvider.verifyToken(idToken);
+
+      default:
+        throw new Error('Unsupported provider');
+    }
+  }
+
   public async forgotPassword(payload: ForgotPasswordDto) {
     const identity = await this.identityService.getIdentityByEmail(payload.email);
 
@@ -217,7 +330,7 @@ export class UserAuthService {
 
     const tokenPayload = await this.authService.verifyToken(token, TokenType.RESET_PASSWORD);
 
-    const userId = convertToObjectId(tokenPayload.sub);
+    const userId = tokenPayload.sub;
 
     const credential = await this.credentialService.getCredentialByUserId(userId);
 
@@ -230,6 +343,8 @@ export class UserAuthService {
     const passwordHash = await hashPassword(password);
 
     await this.credentialService.updateCredentialByUserId(userId, { password: passwordHash });
+
+    await this.authService.revokeToken(tokenPayload.jti);
   }
 
   public async refresh(payload: RefreshDto): Promise<AuthTokenResponse> {
@@ -246,28 +361,26 @@ export class UserAuthService {
   }
 
   // AUTH REQUIRED
-  public async getMe(id: string): Promise<UserIAndIdentity> {
+  public async getMe(id: MongoId): Promise<UserIAndIdentity> {
     const [user, identity] = await Promise.all([
       this.userService.getUserById(id),
-      this.identityService.getIdentityByUserId(convertToObjectId(id)),
+      this.identityService.getIdentityByUserId(id),
     ]);
 
-    if (!user || !identity) throw new ApiError('Unauthorized', HttpStatus.UNAUTHORIZED);
+    if (!user) throw new ApiError('Unauthorized', HttpStatus.UNAUTHORIZED);
 
     return { user, identity };
   }
 
-  public async updateMe(id: string, payload: UpdateMeDto): Promise<UserLean> {
+  public async updateMe(id: MongoId, payload: UpdateMeDto): Promise<UserLean> {
     return this.userService.updateUser(id, {
       ...payload,
-      avatar: payload.avatar ? convertToObjectId(payload.avatar) : undefined,
-      coverImage: payload.coverImage ? convertToObjectId(payload.coverImage) : undefined,
       dob: payload.dob ? new Date(`${payload.dob}T00:00:00Z`) : undefined,
     });
   }
 
-  public async changePassword(id: string, payload: ChangePasswordDto) {
-    const credential = await this.credentialService.getCredentialByUserId(convertToObjectId(id));
+  public async changePassword(id: MongoId, payload: ChangePasswordDto) {
+    const credential = await this.credentialService.getCredentialByUserId(id);
 
     const { password, currentPassword } = payload;
 

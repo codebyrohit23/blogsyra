@@ -16,9 +16,4 @@ export const redisEnvSchema = z.object({
     .transform((val) => parseInt(val, 10)),
 
   REDIS_KEY_PREFIX: z.string().optional(),
-
-  REDIS_DEFAULT_EXPIRES_TIME: z
-    .string()
-    .default('10')
-    .transform((val) => parseInt(val, 10)),
 });

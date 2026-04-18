@@ -6,7 +6,7 @@ export const MODELS = {
     PROFILE: 'UserProfile',
     IDENTITY: 'UserIdentity',
     CREDENTIAL: 'UserCredential',
-    PROVIDER: 'UserProvider',
+    AUTH_PROVIDER: 'UserAuthProvider',
   },
 
   ADMIN: {

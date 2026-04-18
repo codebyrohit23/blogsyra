@@ -1,8 +1,8 @@
-import { EntityStatus, Gender } from '@/shared/constants';
-import { Types } from 'mongoose';
+import { EntityStatus } from '@/shared/constants';
+import { MongoId } from '@/shared/types';
 
 interface IdentityBase {
-  userId: Types.ObjectId;
+  userId: MongoId;
   email?: string;
   emailVerified?: boolean;
   status?: EntityStatus;

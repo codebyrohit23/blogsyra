@@ -10,12 +10,13 @@ import { SessionLean, SessionDocument, SessionModel, Session } from '../models';
 
 import { DeleteResult, FilterQuery, QueryOptions, Types, UpdateQuery } from 'mongoose';
 import { CreateSessionInput } from '../types';
+import { MongoId } from '@/shared/types';
 
 export class SessionRepository {
   constructor(private readonly model = SessionModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<SessionDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<SessionLean | SessionDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -45,7 +46,7 @@ export class SessionRepository {
     return this.model.findOneAndUpdate(filter, update, options);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<SessionLean | null> {
+  deleteById(id: MongoId): Promise<SessionLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
@@ -65,7 +66,7 @@ export class SessionRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<SessionLean | null> {
+  softDelete(id: MongoId): Promise<SessionLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

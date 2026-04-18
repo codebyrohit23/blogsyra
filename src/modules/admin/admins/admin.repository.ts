@@ -8,22 +8,16 @@ import {
 
 import { Admin, AdminDocument, AdminLean, AdminModel } from './admin.model.js';
 
-import {
-  DeleteResult,
-  FilterQuery,
-  QueryOptions,
-  Types,
-  UpdateQuery,
-  UpdateResult,
-} from 'mongoose';
-import { EntityStatus } from '@/shared/constants/enums.js';
-import { CreateAdminInput } from './admin.types.js';
+import { DeleteResult, FilterQuery, QueryOptions, UpdateQuery, UpdateResult } from 'mongoose';
+import { EntityStatus } from '@/shared/constants';
+import { CreateAdminInput } from './admin.type';
+import { MongoId } from '@/shared/types';
 
 export class AdminRepository {
   private readonly model = AdminModel;
 
   findById(
-    id: Types.ObjectId,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<AdminDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<AdminLean | AdminDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -57,7 +51,7 @@ export class AdminRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<AdminDocument | null> {
+  deleteById(id: MongoId): Promise<AdminDocument | null> {
     return this.model.findByIdAndDelete(id);
   }
 
@@ -73,7 +67,7 @@ export class AdminRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string) {
+  softDelete(id: MongoId) {
     return this.model.findByIdAndUpdate(id, { status: EntityStatus.DELETED }, { new: true }).lean();
   }
 

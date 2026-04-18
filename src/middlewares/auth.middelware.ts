@@ -15,12 +15,6 @@ export const auth = (role: Role) =>
 
     const payload = await authService.verifyToken(token, TokenType.ACCESS);
 
-    const { jti } = payload;
-
-    const isTokenBlackListed = await authService.isTokenBlackListed(jti);
-
-    if (isTokenBlackListed) throw jwtInvalidError();
-
     if (payload.role !== role) throw jwtInvalidError();
 
     req.user = payload;

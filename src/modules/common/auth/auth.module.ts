@@ -1,4 +1,4 @@
-import { cacheService } from '@/core/cache';
+import { cacheService } from '@/infra/cache';
 import { RefreshTokenRepository, SessionRepository } from './repositories';
 import {
   AuthService,
@@ -12,14 +12,9 @@ const sessionRepository = new SessionRepository();
 const refreshTokenRepository = new RefreshTokenRepository();
 
 const jwtService = new JWTService();
-const jwtManagerService = new JWTManagerService(jwtService);
+const jwtManagerService = new JWTManagerService(jwtService, cacheService);
 
 const sessionService = new SessionService(sessionRepository, cacheService);
 const refreshTokenService = new RefreshTokenService(refreshTokenRepository);
 
-export const authService = new AuthService(
-  jwtManagerService,
-  sessionService,
-  refreshTokenService,
-  cacheService
-);
+export const authService = new AuthService(jwtManagerService, sessionService, refreshTokenService);

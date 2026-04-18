@@ -1,15 +1,21 @@
-import { cacheService } from '@/core/cache';
-import { UserRepository } from './core/user.repository';
-import { UserService } from './core/user.service';
-import { CredentialRepository } from './credential/credential.repository';
-import { IdentityRepository } from './identity/identity.repository';
-import { IdentityService } from './identity/identity.service';
-import { CredentialService } from './credential/credential.service';
+import { cacheService, cacheVersionService } from '@/infra/cache';
+
+import { UserRepository, UserService, UserCacheVersion } from './core';
+
+import { CredentialRepository, CredentialService } from './credential';
+
+import { IdentityRepository, IdentityService } from './identity';
+
+import { ProviderRepository, ProviderService } from './provider';
 
 const userRepository = new UserRepository();
 const credentialRepository = new CredentialRepository();
 const identityRepository = new IdentityRepository();
+const providerRepository = new ProviderRepository();
 
-export const userService = new UserService(userRepository, cacheService);
-export const credentialService = new CredentialService(credentialRepository, cacheService);
+const userCacheVersion = new UserCacheVersion(cacheVersionService);
+
+export const userService = new UserService(userRepository, cacheService, userCacheVersion);
+export const credentialService = new CredentialService(credentialRepository);
 export const identityService = new IdentityService(identityRepository, cacheService);
+export const providerService = new ProviderService(providerRepository);

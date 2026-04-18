@@ -3,94 +3,40 @@ import { AdminRepository } from './admin.repository.js';
 
 import { AdminPaginationDto, CreateAdminDto, UpdateAdminDto } from './schemas';
 
-import { CreateAdminInput } from './admin.types.js';
+import { CreateAdminInput } from './admin.type.js';
 
-import { AccountStatus, HttpStatus, SortOrder } from '@/shared/constants';
-import { ApiError, convertToObjectId } from '@/shared/utils';
+import { AccountStatus, SortOrder } from '@/shared/constants';
+import { ApiError } from '@/shared/utils';
 
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache/index.js';
 
 import { PaginationResult } from '@/core/db/toolkit';
 import { notFoundError } from '@/core/error';
-import { ADMIN_REDIS_KEYS } from './admin.redis-keys.js';
-import { Types } from 'mongoose';
+import { MongoId } from '@/shared/types/common.type.js';
+import { AdminCacheKeys, AdminCacheVersion, buildQueryKey } from './admin.cache.js';
 
 export class AdminService {
   constructor(
     private readonly repo: AdminRepository,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
+    private readonly adminCacheVersion: AdminCacheVersion
   ) {}
-
-  // public async login(payload: LoginDto): Promise<LoginResponse> {
-  //   const { email, password } = payload;
-
-  //   const admin = await this.getAdminByEmailWithPassword(email);
-
-  //   if (!admin) throw invalidCredentialError();
-
-  //   validateAccountStatus(admin.status);
-
-  //   validatePassword(password, admin.password);
-
-  //   const sessionAndTokenResponse = await this.authService.createSessionAndIssueTokens({
-  //     id: admin._id,
-  //     role: Role.ADMIN,
-  //     platform: payload.platform,
-  //     deviceId: payload.deviceId,
-  //     fcmToken: payload.fcmToken,
-  //     timezone: payload.timeZone,
-  //   });
-
-  //   const adminResponse = buildAdminResponse(admin);
-
-  //   return { admin: adminResponse, tokensResponse: sessionAndTokenResponse.token };
-  // }
-
-  // public async register(payload: RegisterDto) {
-  //   const exists = await this.exists({ email: payload.email });
-
-  //   if (exists) throw new ApiError('Admin already exists with this email', HttpStatus.BAD_REQUEST);
-
-  //   const admin = await this.repo.create(payload);
-
-  //   const sessionAndTokenResponse = await this.authService.createSessionAndIssueTokens({
-  //     id: admin._id,
-  //     role: Role.ADMIN,
-  //     platform: payload.platform,
-  //     deviceId: payload.deviceId,
-  //     fcmToken: payload.fcmToken,
-  //     timezone: payload.timeZone,
-  //   });
-
-  //   const adminResponse = buildAdminResponse(admin);
-
-  //   const redisKey = ADMIN_REDIS_KEYS.patterns.adminsList();
-
-  //   await this.cache.deleteByPattern(redisKey);
-
-  //   return { admin: adminResponse, tokensResponse: sessionAndTokenResponse.token };
-  // }
 
   public async createAdminByAdmin(
     payload: CreateAdminDto,
-    createdBy: string
+    createdBy: MongoId
   ): Promise<AdminDocument> {
-    const { email, roleId, avatar } = payload;
+    const { email } = payload;
 
     const exists = await this.repo.exists({ email });
 
-    if (exists) throw new ApiError('Admin already exists with this email', HttpStatus.BAD_REQUEST);
+    if (exists) {
+      throw new ApiError('Admin already exists with this email');
+    }
 
-    const admin = await this.repo.create({
-      ...payload,
-      createdBy: convertToObjectId(createdBy),
-      roleId: roleId ? convertToObjectId(roleId) : undefined,
-      avatar: avatar ? convertToObjectId(avatar) : undefined,
-    });
-    const redisKey = ADMIN_REDIS_KEYS.patterns.adminsList();
+    const admin = await this.repo.create({ ...payload, createdBy });
 
-    await this.cache.deleteByPattern(redisKey);
-
+    await this.adminCacheVersion.bumpListVersion();
     return admin;
   }
 
@@ -106,9 +52,9 @@ export class AdminService {
     return admin;
   }
 
-  public async getAdminByIdWithPassword(id: string): Promise<AdminLean | null> {
+  public async getAdminByIdWithPassword(id: MongoId): Promise<AdminLean | null> {
     const options = {
-      filter: { _id: convertToObjectId(id), status: AccountStatus.ACTIVE },
+      filter: { _id: id, status: AccountStatus.ACTIVE },
       projection: { password: 1 },
     };
 
@@ -118,9 +64,14 @@ export class AdminService {
   }
 
   public async getAdmins(query: AdminPaginationDto): Promise<PaginationResult<AdminLean>> {
-    const redisKey = ADMIN_REDIS_KEYS.adminsList(query);
+    const version = await this.adminCacheVersion.getListVersion();
 
-    const cached = await this.cache.get<PaginationResult<AdminLean>>(redisKey);
+    const queryKey = buildQueryKey(query);
+
+    const cacheKey = AdminCacheKeys.list(queryKey, version);
+
+    const cached = await this.cache.get<PaginationResult<AdminLean>>(cacheKey);
+
     if (cached) return cached;
 
     const { page, limit, search, status, sortBy, sortOrder } = query;
@@ -150,7 +101,7 @@ export class AdminService {
     });
 
     if (result) {
-      await this.cache.set(redisKey, result);
+      await this.cache.set(cacheKey, result);
     }
 
     return result;
@@ -159,21 +110,19 @@ export class AdminService {
   public async create(payload: CreateAdminInput): Promise<AdminDocument> {
     const admin = await this.repo.create(payload);
 
-    const redisKey = ADMIN_REDIS_KEYS.patterns.adminsList();
-
-    await this.cache.deleteByPattern(redisKey);
+    await this.adminCacheVersion.bumpListVersion();
 
     return admin;
   }
 
-  public async getAdminById(id: string): Promise<AdminLean> {
-    const redisKey = ADMIN_REDIS_KEYS.adminById(id);
+  public async getAdminById(id: MongoId): Promise<AdminLean> {
+    const cacheKey = AdminCacheKeys.byId(id);
 
-    const cached = await this.cache.get<AdminLean>(redisKey);
+    const cached = await this.cache.get<AdminLean>(cacheKey);
 
     if (cached) return cached;
 
-    const filter = { _id: convertToObjectId(id), status: AccountStatus.ACTIVE };
+    const filter = { _id: id, status: AccountStatus.ACTIVE };
 
     const populate = {
       path: 'avatar',
@@ -184,40 +133,31 @@ export class AdminService {
 
     if (!admin) throw notFoundError('Admin');
 
-    await this.cache.set(redisKey, admin);
+    await this.cache.set(cacheKey, admin);
 
     return admin;
   }
 
   public async getAdminByEmail(email: string): Promise<AdminLean | null> {
-    const redisKey = ADMIN_REDIS_KEYS.adminByEmail(email);
-
-    const cached = await this.cache.get<AdminLean>(redisKey);
-
-    if (cached) return cached;
-
     const admin = await this.repo.findOne({ filter: { email } });
-
-    await this.cache.set(redisKey, admin);
 
     return admin;
   }
 
-  public async updateAdminById(id: string, payload: UpdateAdminDto): Promise<AdminLean> {
+  public async updateAdminById(id: MongoId, payload: UpdateAdminDto): Promise<AdminLean> {
     const admin = await this.repo.updateOne({ _id: id }, payload);
 
     if (!admin) throw notFoundError('Admin');
 
-    const redisPattern = ADMIN_REDIS_KEYS.patterns.all();
-
-    const redisKey = ADMIN_REDIS_KEYS.adminById(id.toString());
-
-    await Promise.all([this.cache.deleteByPattern(redisPattern), this.cache.set(redisKey, admin)]);
+    await Promise.all([
+      this.cache.del(AdminCacheKeys.byId(id)),
+      this.adminCacheVersion.bumpListVersion(),
+    ]);
 
     return admin;
   }
 
-  public async updatePasswordById(id: Types.ObjectId, password: string): Promise<AdminLean | null> {
+  public async updatePasswordById(id: MongoId, password: string): Promise<AdminLean | null> {
     const admin = await this.repo.updateOne(
       { _id: id },
       { password, passwordChangedAt: new Date() }
@@ -226,14 +166,15 @@ export class AdminService {
     return admin;
   }
 
-  public async deleteAdmin(id: string) {
+  public async deleteAdmin(id: MongoId) {
     const admin = await this.repo.deleteById(id);
 
     if (!admin) throw notFoundError('Admin');
 
-    const redisPattern = ADMIN_REDIS_KEYS.patterns.all();
-
-    await this.cache.deleteByPattern(redisPattern);
+    await Promise.all([
+      this.cache.del(AdminCacheKeys.byId(id)),
+      this.adminCacheVersion.bumpListVersion(),
+    ]);
 
     return admin;
   }

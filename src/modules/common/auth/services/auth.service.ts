@@ -9,19 +9,17 @@ import {
   TokenType,
   VerifiedTokenResponse,
 } from '../types';
+
 import { JWTManagerService } from './jwt-manager.service';
 import { SessionService } from './session.service';
 import { RefreshTokenService } from './refresh-token.service';
 import { Role } from '@/shared/constants';
-import { CacheService } from '@/core/cache';
-import { AUTH_REDIS_KEYS } from '../utils';
 
 export class AuthService {
   constructor(
     private readonly jwtManagerService: JWTManagerService,
     private readonly sessionService: SessionService,
-    private readonly refreshTokenService: RefreshTokenService,
-    private readonly cache: CacheService
+    private readonly refreshTokenService: RefreshTokenService
   ) {}
 
   public async getEmailVerificationToken(payload: EmailVerificationTokenInput) {
@@ -35,7 +33,7 @@ export class AuthService {
     const tokenFamily = generateUniqueId();
 
     const jwtPayload = {
-      id: payload.id.toString(),
+      id: payload.id,
       sessionId,
       tokenFamily,
       role: payload.role,
@@ -94,7 +92,7 @@ export class AuthService {
   }
 
   public async refresh(refreshToken: string): Promise<AuthTokenPairResponse> {
-    const refreshPayload = this.jwtManagerService.verifyRefreshToken(refreshToken);
+    const refreshPayload = await this.jwtManagerService.verifyRefreshToken(refreshToken);
 
     await this.refreshTokenService.validateRefreshToken(refreshPayload);
 
@@ -126,19 +124,13 @@ export class AuthService {
   public async logout(aceessToken: string) {
     const { jti, sessionId } = await this.jwtManagerService.verifyAccessToken(aceessToken);
     await Promise.all([
-      this.blackListAccessToken(jti),
+      this.revokeToken(jti),
       this.sessionService.logout(sessionId),
       this.refreshTokenService.revokeTokenBySession(sessionId),
     ]);
   }
 
-  private async blackListAccessToken(jti: string) {
-    const redisKey = AUTH_REDIS_KEYS.token.blackList(jti);
-    return this.cache.set(redisKey, 1);
-  }
-
-  public async isTokenBlackListed(jti: string) {
-    const redisKey = AUTH_REDIS_KEYS.token.blackList(jti);
-    return this.cache.get(redisKey);
+  public async revokeToken(jti: string) {
+    return this.jwtManagerService.revokeToken(jti);
   }
 }

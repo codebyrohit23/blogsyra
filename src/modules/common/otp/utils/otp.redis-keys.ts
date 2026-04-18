@@ -1,10 +1,10 @@
-import { buildKey } from '@/core/cache';
-import { RefType } from 'mongoose';
+import { buildKey } from '@/infra/cache';
 import { OtpRefType } from '../otp.type';
+import { MongoId } from '@/shared/types';
 
 export const OTP_REDIS_KEYS = {
-  otp: (refId: string, purpose: string, refType: OtpRefType) =>
-    buildKey('otp', refType, purpose, refId),
+  otp: (refId: MongoId, purpose: string, refType: OtpRefType) =>
+    buildKey('otp', refType, purpose, refId.toString()),
 
   patterns: {
     otp: () => buildKey('otp', '*'),

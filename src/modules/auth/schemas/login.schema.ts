@@ -1,9 +1,9 @@
 import { DEFAULT_TIMEZONE, Platform } from '@/shared/constants';
-import { emailSchema, passwordSchema, zTrimmedStringSchema } from '@/shared/schemas';
+import { emailSchema, zTrimmedStringSchema } from '@/shared/schemas';
 import { isValidTimezone } from '@/shared/utils';
+import { LoginTYpe } from '../auth.type';
 
 import { z } from 'zod';
-import { LoginTYpe } from '../auth.type';
 
 export const loginSchema = z
   .object({

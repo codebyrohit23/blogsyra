@@ -1,4 +1,4 @@
-import { cacheService } from '@/core/cache';
+import { cacheService } from '@/infra/cache';
 import { RoleRepository } from './role.repository';
 import { RoleService } from './role.service';
 import { RoleController } from './role.controller';

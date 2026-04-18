@@ -13,18 +13,18 @@ import {
   DeleteResult,
   FilterQuery,
   QueryOptions,
-  Types,
   UpdateQuery,
   UpdateResult,
 } from 'mongoose';
 
 import { CreateIdentityInput } from './identity.type';
+import { MongoId } from '@/shared/types';
 
 export class IdentityRepository {
   constructor(private readonly model = IdentityModel) {}
 
   findById(
-    id: string,
+    id: MongoId,
     payload?: Omit<BuildQueryOptions<IdentityDocument>, 'filter' | 'limit' | 'skip'>
   ): Promise<IdentityLean | IdentityDocument | null> {
     const { populate, select, options, projection, lean } = payload ?? {};
@@ -60,7 +60,7 @@ export class IdentityRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<IdentityLean | null> {
+  deleteById(id: MongoId): Promise<IdentityLean | null> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
@@ -76,7 +76,7 @@ export class IdentityRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<IdentityLean | null> {
+  softDelete(id: MongoId): Promise<IdentityLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

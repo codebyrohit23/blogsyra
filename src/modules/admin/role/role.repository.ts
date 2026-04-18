@@ -6,14 +6,7 @@ import {
   PaginationInput,
 } from '@/core/db/toolkit';
 
-import {
-  RoleLean,
-  RoleDocument,
-  RoleModel,
-  Role,
-  CreateRoleInput,
-  UpdateRoleInput,
-} from './role.model';
+import { RoleLean, RoleDocument, RoleModel, Role } from './role.model';
 
 import {
   DeleteResult,
@@ -23,6 +16,7 @@ import {
   UpdateQuery,
   UpdateResult,
 } from 'mongoose';
+import { CreateRoleInput, UpdateRoleInput } from './role.type';
 
 export class RoleRepository {
   constructor(private readonly model = RoleModel) {}
@@ -62,7 +56,7 @@ export class RoleRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<RoleDocument | null> {
+  deleteById(id: string): Promise<RoleDocument | null> {
     return this.model.findByIdAndDelete(id);
   }
 

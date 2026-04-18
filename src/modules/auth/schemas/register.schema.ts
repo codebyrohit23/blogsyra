@@ -1,5 +1,5 @@
 import { DEFAULT_TIMEZONE, Platform } from '@/shared/constants';
-import { emailSchema, passwordSchema, zTrimmedStringSchema } from '@/shared/schemas';
+import { passwordSchema, zTrimmedStringSchema } from '@/shared/schemas';
 import { FCM_TOKEN_REGEX, isValidTimezone, JWT_REGEX } from '@/shared/utils';
 
 import { z } from 'zod';
@@ -7,8 +7,6 @@ import { z } from 'zod';
 export const registerSchema = z
   .object({
     token: zTrimmedStringSchema(100, 1000, 'Invalid token').regex(JWT_REGEX, 'Invalid token'),
-
-    email: emailSchema,
 
     name: zTrimmedStringSchema(2, 50, 'Name must be between 2-50 characters'),
 

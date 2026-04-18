@@ -1,4 +1,4 @@
-import { cacheService } from '@/core/cache';
+import { cacheService } from '@/infra/cache';
 import { PermissionRepository } from './permission.repository';
 import { PermissionService } from './permission.service';
 import { PermissionController } from './permission.controller';

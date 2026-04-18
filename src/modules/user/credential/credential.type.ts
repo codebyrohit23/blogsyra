@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import { MongoId } from '@/shared/types';
 
 interface CredentialBase {
-  userId: Types.ObjectId;
+  userId: MongoId;
   password: string;
 }
 

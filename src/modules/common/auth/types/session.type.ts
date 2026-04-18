@@ -1,9 +1,9 @@
 import { MODELS, Platform } from '@/shared/constants';
-import { Types } from 'mongoose';
+import { MongoId } from '@/shared/types';
 
 export interface CreateSessionInput {
   sessionId: string;
-  refId: Types.ObjectId;
+  refId: MongoId;
   refType: SessionRefType;
   platform: Platform;
   deviceId: string;

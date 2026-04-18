@@ -10,6 +10,7 @@ import {
   verifyEmailSchema,
   updateMeSchema,
   refreshSchema,
+  socialSocialLoginSchema,
 } from './schemas';
 
 import { authController } from './auth.module';
@@ -28,6 +29,12 @@ authRoutes
   .post('/register', validate(registerSchema, ValidationSource.BODY), authController.register)
 
   .post('/login', validate(loginSchema, ValidationSource.BODY), authController.login)
+
+  .post(
+    '/social-login',
+    validate(socialSocialLoginSchema, ValidationSource.BODY),
+    authController.socialLogin
+  )
 
   .post(
     '/forgot-password',

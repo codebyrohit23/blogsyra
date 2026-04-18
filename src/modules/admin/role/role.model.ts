@@ -43,8 +43,8 @@ export const RoleModel = mongoose.model(MODELS.ADMIN.ROLE, RoleSchema);
 
 export type Role = InferSchemaType<typeof RoleSchema>;
 
-export type CreateRoleInput = Omit<Role, 'status' | 'createdAt' | 'updatedAt'>;
-export type UpdateRoleInput = Partial<Omit<Role, 'createdAt' | 'updatedAt'>>;
+// export type CreateRoleInput = Omit<Role, 'status' | 'createdAt' | 'updatedAt'>;
+// export type UpdateRoleInput = Partial<Omit<Role, 'createdAt' | 'updatedAt'>>;
 
 export type RoleDocument = HydratedDocument<Role>;
 export type RoleLean = { _id: Types.ObjectId } & Role;

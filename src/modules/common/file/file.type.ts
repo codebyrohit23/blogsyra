@@ -61,7 +61,7 @@
 // }
 
 // export interface FinalizeUpload {
-//   id: string | Types.ObjectId;
+//   id: string;
 //   folderName: string;
 //   ownerId: string;
 //   ownerType: FileOwnerEnum;

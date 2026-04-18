@@ -1,4 +1,4 @@
-import { buildKey } from '@/core/cache';
+import { buildKey } from '@/infra/cache';
 
 export const AUTH_REDIS_KEYS = {
   session: {

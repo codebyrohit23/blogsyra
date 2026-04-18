@@ -1,4 +1,4 @@
-import { EntityStatus, Gender, MODELS } from '@/shared/constants';
+import { EntityStatus, MODELS } from '@/shared/constants';
 import { Schema, model, InferSchemaType, HydratedDocument, Types } from 'mongoose';
 
 const IdentitySchema = new Schema(

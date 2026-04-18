@@ -12,12 +12,19 @@ import {
 } from '../types';
 
 import { config } from '@/core/config';
-import { addTime, generateUniqueId } from '@/shared/utils';
+
+import { addTime, generateUniqueId, toStringId } from '@/shared/utils';
 
 import { JWTService } from './jwt.service';
+import { CacheService } from '@/infra/cache';
+import { jwtInvalidError } from '@/core/error';
+import { JwtCacheKeys } from '../cache';
 
 export class JWTManagerService {
-  constructor(private readonly jwtService: JWTService) {}
+  constructor(
+    private readonly jwtService: JWTService,
+    private readonly cache: CacheService
+  ) {}
 
   public generateEmailVerificationToken(payload: EmailVerificationTokenInput): TokenResult {
     const { id, role } = payload;
@@ -25,7 +32,7 @@ export class JWTManagerService {
     const jti = generateUniqueId();
 
     const tokenPayload: EmailVerificationTokenPayload = {
-      sub: id,
+      sub: toStringId(id),
       type: TokenType.EMAIL_VERIFICATION,
       jti,
       role,
@@ -33,7 +40,7 @@ export class JWTManagerService {
 
     const token = this.jwtService.generateEmailVerificationToken(tokenPayload);
 
-    const ttl = config.token.resetPassword.expiresIn;
+    const ttl = config.auth.jwt.resetPassword.expiresIn;
 
     const expiresAt = addTime({ seconds: ttl });
 
@@ -44,8 +51,9 @@ export class JWTManagerService {
     };
   }
 
-  public verifyEmailVerificationToken(token: string): EmailVerificationTokenPayload {
+  public async verifyEmailVerificationToken(token: string): Promise<EmailVerificationTokenPayload> {
     const payload = this.jwtService.verifyEmailVerificationToken(token);
+    await this.isRvoked(payload.sub);
     return payload;
   }
 
@@ -56,7 +64,7 @@ export class JWTManagerService {
     const refreshJti = generateUniqueId();
 
     const accessPayload: AccessTokenPayload = {
-      sub: id,
+      sub: toStringId(id),
       type: TokenType.ACCESS,
       sessionId,
       jti: acessJti,
@@ -64,7 +72,7 @@ export class JWTManagerService {
     };
 
     const refreshPayload: RefreshTokenPayload = {
-      sub: id,
+      sub: toStringId(id),
       type: TokenType.REFRESH,
       sessionId,
       tokenFamily,
@@ -75,8 +83,8 @@ export class JWTManagerService {
     const accessToken = this.jwtService.generateAccessToken(accessPayload);
     const refreshToken = this.jwtService.generateRefreshToken(refreshPayload);
 
-    const accessTokenTTL = config.token.access.expiresIn;
-    const refreshTokenTTL = config.token.refresh.expiresIn;
+    const accessTokenTTL = config.auth.jwt.access.expiresIn;
+    const refreshTokenTTL = config.auth.jwt.refresh.expiresIn;
 
     const accessTokenExpiresAt = addTime({ seconds: accessTokenTTL });
     const refreshTokenExpiresAt = addTime({ seconds: refreshTokenTTL });
@@ -96,13 +104,15 @@ export class JWTManagerService {
     };
   }
 
-  verifyAccessToken(token: string): AccessTokenPayload {
+  public async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
     const payload = this.jwtService.verifyAccessToken(token);
+    await this.isRvoked(payload.sub);
     return payload;
   }
 
-  public verifyRefreshToken(token: string): RefreshTokenPayload {
+  public async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
     const payload = this.jwtService.verifyRefreshToken(token);
+    await this.isRvoked(payload.sub);
     return payload;
   }
 
@@ -112,7 +122,7 @@ export class JWTManagerService {
     const jti = generateUniqueId();
 
     const tokenPayload: ResetPasswordTokenPayload = {
-      sub: id,
+      sub: toStringId(id),
       type: TokenType.RESET_PASSWORD,
       jti,
       role,
@@ -120,7 +130,7 @@ export class JWTManagerService {
 
     const token = this.jwtService.generateResetPasswordToken(tokenPayload);
 
-    const resetPasswordTTL = config.token.resetPassword.expiresIn;
+    const resetPasswordTTL = config.auth.jwt.resetPassword.expiresIn;
 
     const expiresAt = addTime({ seconds: resetPasswordTTL });
 
@@ -131,8 +141,24 @@ export class JWTManagerService {
     };
   }
 
-  public verifyResetPasswordToken(token: string): ResetPasswordTokenPayload {
+  public async verifyResetPasswordToken(token: string): Promise<ResetPasswordTokenPayload> {
     const payload = this.jwtService.verifyResetPasswordToken(token);
+    await this.isRvoked(payload.sub);
     return payload;
+  }
+
+  public async revokeToken(jti: string) {
+    const cacheKey = JwtCacheKeys.blackList(jti);
+    return this.cache.set(cacheKey, 1);
+  }
+
+  private async isRvoked(jti: string) {
+    const cacheKey = JwtCacheKeys.blackList(jti);
+
+    const isRevoked = await this.cache.get(cacheKey);
+
+    if (isRevoked) {
+      throw jwtInvalidError();
+    }
   }
 }

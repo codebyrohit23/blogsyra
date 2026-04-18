@@ -2,13 +2,13 @@
 // import { Types } from 'mongoose';
 
 // interface ProfileBase {
-//   userId: Types.ObjectId;
+//   userId: string;
 //   name: string;
 //   gender?: Gender;
 //   bio?: string;
 //   dob?: Date;
-//   avatar?: Types.ObjectId;
-//   coverImage?: Types.ObjectId;
+//   avatar?: string;
+//   coverImage?: string;
 //   status: EntityStatus;
 // }
 

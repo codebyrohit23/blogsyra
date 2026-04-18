@@ -65,7 +65,7 @@ export class PermissionRepository {
     return this.model.updateMany(filter, update);
   }
 
-  deleteById(id: string | Types.ObjectId): Promise<PermissionDocument | null> {
+  deleteById(id: string): Promise<PermissionDocument | null> {
     return this.model.findByIdAndDelete(id);
   }
 
@@ -81,7 +81,7 @@ export class PermissionRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string | Types.ObjectId): Promise<PermissionLean | null> {
+  softDelete(id: string): Promise<PermissionLean | null> {
     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
   }
 

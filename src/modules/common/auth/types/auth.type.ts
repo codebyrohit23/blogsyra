@@ -1,10 +1,10 @@
 import { Platform, Role } from '@/shared/constants';
-import { Types } from 'mongoose';
 import { SessionLean } from '../models';
 import { AuthTokenPairResponse } from './jwt.type';
+import { MongoId } from '@/shared/types';
 
 export interface CreateSessionAndIssueTokensPayload {
-  id: Types.ObjectId;
+  id: MongoId;
   role: Role;
 
   platform: Platform;

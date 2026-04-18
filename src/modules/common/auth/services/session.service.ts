@@ -1,5 +1,5 @@
 import { notFoundError } from '@/core/error';
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { SessionRepository } from '../repositories';
 import { SessionDocument, SessionLean } from '../models';
 import { CreateSessionInput, SessionStatus } from '../types';

@@ -1,4 +1,5 @@
 import { Role } from '@/shared/constants';
+import { MongoId } from '@/shared/types';
 
 export enum TokenType {
   ACCESS = 'access',
@@ -48,19 +49,19 @@ export interface AuthTokenPairResponse {
 }
 
 export interface AuthTokenPairInput {
-  id: string;
+  id: MongoId;
   sessionId: string;
   tokenFamily: string;
   role: Role;
 }
 
 export interface ResetPasswordTokenInput {
-  id: string;
+  id: MongoId;
   role: Role;
 }
 
 export interface EmailVerificationTokenInput {
-  id: string;
+  id: MongoId;
   role: Role;
 }
 

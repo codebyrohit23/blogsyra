@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
 export const authEnvSchema = z.object({
-  BCRYPT_SALT_ROUNDS: z
+  JWT_PRIVATE_KEY: z
     .string()
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val >= 10 && val <= 15, {
-      message: 'Salt rounds should be between 10 and 15',
-    })
-    .default(12),
+    .min(1, 'PRIVATE_KEY is required')
+    .refine((val) => val.includes('BEGIN PRIVATE KEY'), 'PRIVATE_KEY must be a valid PEM'),
+
+  JWT_PUBLIC_KEY: z
+    .string()
+    .min(1, 'JWT_PUBLIC_KEY is required')
+    .refine((val) => val.includes('BEGIN PUBLIC KEY'), 'JWT_PUBLIC_KEY must be a valid PEM'),
+
+  GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID is required'),
 });

@@ -6,7 +6,7 @@ import { notFoundError } from '@/core/error';
 import { CreatePermissionDto, UpdatePermissionDto } from './schemas/permission.schema';
 import { ApiError } from '@/shared/utils';
 import { PermissionType } from './permission.type';
-import { CacheService } from '@/core/cache';
+import { CacheService } from '@/infra/cache';
 import { PERMISSION_REDIS_KEYS } from './permission.redis-keys';
 import { PermissionPaginationDto } from './schemas';
 

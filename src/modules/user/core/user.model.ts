@@ -1,5 +1,4 @@
-import { MODELS } from '@/shared/constants';
-import { AccountStatus, Gender } from '@/shared/constants/enums';
+import { AccountStatus, Gender, MODELS } from '@/shared/constants';
 import { Schema, model, InferSchemaType, HydratedDocument, Types } from 'mongoose';
 
 const UserSchema = new Schema(
@@ -22,13 +21,11 @@ const UserSchema = new Schema(
     },
 
     avatar: {
-      type: Schema.Types.ObjectId,
-      ref: MODELS.COMMON.FILE,
+      type: String,
     },
 
     coverImage: {
-      type: Schema.Types.ObjectId,
-      ref: MODELS.COMMON.FILE,
+      type: String,
     },
 
     status: {
