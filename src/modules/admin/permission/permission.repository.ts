@@ -81,10 +81,6 @@ export class PermissionRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<PermissionLean | null> {
-    return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
-  }
-
   async exists(filter: FilterQuery<Permission>): Promise<boolean> {
     const result = await this.model.exists(filter);
     return !!result;

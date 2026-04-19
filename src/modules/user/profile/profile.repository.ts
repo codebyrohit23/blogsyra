@@ -71,10 +71,6 @@
 //     return paginate(this.model, { ...payload });
 //   }
 
-//   softDelete(id: string): Promise<ProfileLean | null> {
-//     return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
-//   }
-
 //   async exists(filter: FilterQuery<Profile>): Promise<boolean> {
 //     const result = await this.model.exists(filter);
 //     return !!result;

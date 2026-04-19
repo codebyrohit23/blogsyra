@@ -28,9 +28,9 @@ export const updateMeSchema = z
       "Invalid language code format (e.g., 'en' or 'en-US')."
     ),
 
-    avatar: zObjectId('Invalid avatar'),
+    avatar: z.string().url(),
 
-    coverImage: zObjectId('Invalid avatar'),
+    coverImage: z.string().url(),
   })
   .strict()
   .partial()

@@ -76,10 +76,6 @@ export class IdentityRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: MongoId): Promise<IdentityLean | null> {
-    return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
-  }
-
   async exists(filter: FilterQuery<Identity>): Promise<boolean> {
     const result = await this.model.exists(filter);
     return !!result;

@@ -72,10 +72,6 @@ export class RoleRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: string): Promise<Role | null> {
-    return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
-  }
-
   async exists(filter: FilterQuery<Role>): Promise<boolean> {
     const result = await this.model.exists(filter);
     return !!result;

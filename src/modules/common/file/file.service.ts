@@ -1,135 +1,115 @@
-// import { QueryFileInput, UpdateFileInput } from './schemas';
-// import { notFoundError } from '@errors/index';
-// import { FileDocument, FinalizeUpload, StorageProviderEnum } from './file.type';
-// import { FileRepository } from './file.repository';
-// import { AppError } from '@utils/index';
-// import { Types } from 'mongoose';
-// import { BaseService } from '@core/base.service';
-// import { PaginationResult } from '@core/base.repository';
-// import { cloudinaryService } from '@cloudinary/index';
+import { FileRepository } from './file.repository';
+import { notFoundError } from '@/core/error';
+import { FileDocument, FileLean } from './file.model';
+import { CacheService } from '@/infra/cache';
+import { Role } from '@/shared/constants';
+import { MongoId } from '@/shared/types';
+import { FileCacheKeys, FileCacheVersion } from './file.cache';
+import { CloudinaryService } from '@/infra/storage';
+import { CreateFileInput, FileOwnerRef, FileStatus, StorageProvider } from './file.types';
 
-// export class FileService {
-//   constructor() {}
-//   // getFiles = async (query: QueryFileInput): Promise<PaginationResult<FileDocument>> => {
-//   //   const { page, limit, search, isActive, sortBy, sortOrder } = query;
+export class FileService {
+  constructor(
+    private readonly repo: FileRepository,
+    private readonly cache: CacheService,
+    private readonly fileCacheVersion: FileCacheVersion,
+    private readonly cloudinaryService: CloudinaryService
+  ) {}
 
-//   //   // Logic to fetch files based on validated query parameters
-//   //   const skip = (Number(page) - 1) * Number(limit);
-//   //   const filter: any = {};
+  public async uploadFile(
+    file: Express.Multer.File,
+    userId: MongoId,
+    role: Role
+  ): Promise<Partial<FileDocument>> {
+    const uploaded = await this.cloudinaryService.uploadFile(file);
 
-//   //   if (search) {
-//   //     filter.$or = [
-//   //       { name: { $regex: search, $options: 'i' } },
-//   //       { description: { $regex: search, $options: 'i' } },
-//   //     ];
-//   //   }
+    const fileOwnerRef = role === Role.ADMIN ? FileOwnerRef.ADMIN : FileOwnerRef.USER;
 
-//   //   if (isActive !== undefined) {
-//   //     query.isActive = isActive === true;
-//   //   }
+    const uploadPayload = {
+      storageProvider: StorageProvider.CLOUDINARY,
+      bucket: uploaded.folder,
+      key: uploaded.publicId,
+      url: uploaded.url,
+      mimeType: uploaded.resourceType,
+      size: uploaded.bytes,
+      ownerType: fileOwnerRef,
+      ownerId: userId,
+    };
 
-//   //   const sortOptions: { [key: string]: 1 | -1 } = {
-//   //     name: sortOrder === 'asc' ? 1 : -1,
-//   //     createdAt: sortOrder === 'asc' ? 1 : -1,
-//   //   };
-//   //   return this.findWithPagination(filter, { page, limit, sort: sortOptions });
-//   // };
+    const fileDoc = await this.createFile(uploadPayload);
 
-//   getFiles = async (query: QueryFileInput): Promise<PaginationResult<FileDocument>> => {
-//     const {
-//       page,
-//       limit,
-//       search,
-//       storageProvider,
-//       uploadStatus,
-//       used,
-//       isDeleted,
-//       ownerType,
-//       ownerId,
-//       sortBy,
-//       sortOrder,
-//     } = query;
+    return { url: fileDoc.url, size: fileDoc.size, mimeType: fileDoc.mimeType };
+  }
 
-//     const filter: Record<string, any> = {};
+  //   public async getFiles(query: FilePaginationDto): Promise<PaginationResult<FileLean>> {
+  //     const version = await this.fileCacheVersion.getListVersion();
 
-//     /* ---------- Search (match name, filename, bucket) ---------- */
-//     if (search) {
-//       filter.$or = [
-//         { originalName: { $regex: search, $options: 'i' } },
-//         { filename: { $regex: search, $options: 'i' } },
-//         { bucket: { $regex: search, $options: 'i' } },
-//       ];
-//     }
+  //     const queryKey = buildQueryKey(query);
 
-//     /* ---------- Filters ---------- */
-//     if (storageProvider) filter.storageProvider = storageProvider;
-//     if (uploadStatus) filter.uploadStatus = uploadStatus;
-//     if (used !== undefined) filter.used = used;
-//     if (isDeleted !== undefined) filter.isDeleted = isDeleted;
-//     if (ownerType) filter.ownerType = ownerType;
-//     if (ownerId) filter.ownerId = ownerId;
+  //     const cacheKey = FileCacheKeys.list(queryKey, version);
 
-//     /* ---------- Sort Options ---------- */
-//     const sortOptions: Record<string, 1 | -1> = {
-//       [sortBy || 'createdAt']: sortOrder === 'asc' ? 1 : -1,
-//     };
+  //     const cached = await this.cache.get<PaginationResult<FileLean>>(cacheKey);
 
-//     /* ---------- Reuse existing pagination helper ---------- */
-//     return this.findWithPagination(filter, { page, limit, sort: sortOptions });
-//   };
+  //     if (cached) return cached;
 
-//   upload = async (file: Express.Multer.File): Promise<FileDocument> => {
-//     const uploaded = await cloudinaryService.uploadFile(file.path);
-//     const uploadPayload = {
-//       storageProvider: StorageProviderEnum.CLOUDINARY,
-//       bucket: uploaded.folder,
-//       key: uploaded.publicId,
-//       url: uploaded.url,
-//       originalName: file.originalname,
-//       filename: file.filename,
-//       mimeType: uploaded.resourceType,
-//       size: uploaded.bytes,
-//     };
-//     return this.create(uploadPayload);
-//   };
+  //     const { page, limit, search, status, sortBy, sortOrder } = query;
 
-//   getFile = async (id: string): Promise<FileDocument> => {
-//     const file = await this.findById(id);
-//     if (!file) throw notFoundError('File');
-//     return file;
-//   };
+  //     const filter: Record<string, any> = {};
 
-//   updateFile = async (payload: UpdateFileInput, id: string): Promise<FileDocument> => {
-//     const file = await this.updateById(id, payload);
-//     if (!file) throw notFoundError('File');
-//     return file;
-//   };
+  //     if (search) {
+  //       filter.$or = [
+  //         { name: { $regex: search, $options: 'i' } },
+  //         { description: { $regex: search, $options: 'i' } },
+  //       ];
+  //     }
 
-//   deleteFile = async (id: string): Promise<FileDocument> => {
-//     const file = await this.deleteById(id);
-//     if (!file) throw notFoundError('File');
-//     await cloudinaryService.deleteFile(file.key);
-//     return file;
-//   };
+  //     if (status) {
+  //       filter.status = status;
+  //     }
 
-//   finalizeUpload = async (payload: FinalizeUpload): Promise<FileDocument> => {
-//     const { id, folderName, ownerType, ownerId, resourceType, resourceId, uploadedBy } = payload;
-//     const file = await this.findById(id, { select: 'key' });
-//     if (!file) throw new AppError('File not found!');
-//     const uploadResult = await cloudinaryService.moveFile(file.key, folderName);
-//     const updateFilePayload: UpdateFileInput = {
-//       bucket: uploadResult?.folder,
-//       key: uploadResult?.publicId,
-//       url: uploadResult?.url,
-//       ownerType,
-//       ownerId,
-//       used: true,
-//       uploadedBy,
-//       resourceType,
-//       resourceId,
-//     };
-//     const fileDoc = await this.updateById(id, updateFilePayload);
-//     if (!fileDoc) throw new AppError('Failed to save file');
-//     return fileDoc;
-//   };
-// }
+  //     const sort: Record<string, 1 | -1> = {
+  //       [sortBy]: sortOrder === SortOrder.ASC ? 1 : -1,
+  //     };
+
+  //     const result = await this.repo.paginate({
+  //       filter,
+  //       sort,
+  //       page,
+  //       limit,
+  //     });
+
+  //     if (result) {
+  //       await this.cache.set(cacheKey, result);
+  //     }
+
+  //     return result;
+  //   }
+
+  private async createFile(payload: CreateFileInput): Promise<FileDocument> {
+    const file = await this.repo.create(payload);
+
+    await this.fileCacheVersion.bumpListVersion();
+
+    return file;
+  }
+
+  public async getFile(id: MongoId): Promise<FileLean> {
+    const cacheKey = FileCacheKeys.byId(id);
+
+    const cached = await this.cache.get<FileLean>(cacheKey);
+
+    if (cached) return cached;
+
+    const file = await this.repo.findById(id);
+
+    if (!file) throw notFoundError('File');
+
+    await this.cache.set(cacheKey, file);
+
+    return file;
+  }
+
+  public async deleteFileByUrl(url: string) {
+    return this.repo.updateOne({ url }, { status: FileStatus.DELETED, deletedAt: new Date() });
+  }
+}

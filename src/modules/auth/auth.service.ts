@@ -22,7 +22,6 @@ import { logger } from '@/core/logger';
 
 import {
   CredentialService,
-  IdentityLean,
   IdentityService,
   ProviderService,
   UserLean,
@@ -34,6 +33,7 @@ import { getConnection } from '@/infra/db/mongo';
 import { MongoId } from '@/shared/types';
 import { GoogleProvider } from '@/infra/oauth/google.provider';
 import { IdTokenPayload } from '@/infra/oauth';
+import { FileService } from '../common/file';
 
 export class UserAuthService {
   constructor(
@@ -43,7 +43,8 @@ export class UserAuthService {
     private readonly identityService: IdentityService,
     private readonly providerService: ProviderService,
     private readonly googleProvider: GoogleProvider,
-    private readonly otpService: OtpService
+    private readonly otpService: OtpService,
+    private readonly fileService: FileService
   ) {}
 
   public async verifyEmail(payload: VerifyEmailDto) {
@@ -373,10 +374,28 @@ export class UserAuthService {
   }
 
   public async updateMe(id: MongoId, payload: UpdateMeDto): Promise<UserLean> {
-    return this.userService.updateUser(id, {
+    const { avatar, coverImage } = payload;
+
+    let oldUser;
+
+    if (avatar || coverImage) {
+      oldUser = await this.userService.getUserById(id);
+    }
+
+    const updatedUser = await this.userService.updateUser(id, {
       ...payload,
       dob: payload.dob ? new Date(`${payload.dob}T00:00:00Z`) : undefined,
     });
+
+    if (avatar && oldUser && oldUser.avatar && oldUser.avatar !== avatar) {
+      await this.fileService.deleteFileByUrl(oldUser.avatar);
+    }
+
+    if (coverImage && oldUser && oldUser.coverImage && oldUser.coverImage !== avatar) {
+      await this.fileService.deleteFileByUrl(oldUser.coverImage);
+    }
+
+    return updatedUser;
   }
 
   public async changePassword(id: MongoId, payload: ChangePasswordDto) {

@@ -81,10 +81,6 @@ export class CredentialRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: MongoId): Promise<CredentialLean | null> {
-    return this.model.findByIdAndUpdate(id, { isActive: false }, { new: true }).lean();
-  }
-
   async exists(filter: FilterQuery<Credential>): Promise<boolean> {
     const result = await this.model.exists(filter);
     return !!result;

@@ -96,6 +96,7 @@ export enum TimeUnit {
 
 export enum REDIS_TTL {
   DEFAULT = 15 * 60,
+  LIST = 5 * 60,
   ACCESS_TOKEN = 15 * 60,
   REFRESH_TOKEN = 30 * 24 * 60 * 60,
   RESET_PASSWORD_TOKEN = 10 * 60,

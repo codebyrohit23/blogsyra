@@ -1,1 +1,1 @@
-import '@/modules/auth/docs/auth.docs';
+import '@/modules/auth/docs';

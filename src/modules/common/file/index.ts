@@ -1,8 +1,5 @@
-// export * from './file.controller';
-// export * from './file.model';
-// export * from './file.route';
-// export * from './file.service';
-// export * from './file.type';
-// export * from './fileOwner.type';
-// export * from './filePath.util';
-// export * from './fileResource.type';
+export { fileRoutes } from './file.route';
+
+export { FileService } from './file.service';
+
+export { fileService } from './file.module';

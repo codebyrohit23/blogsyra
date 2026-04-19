@@ -1,66 +1,47 @@
-// import { BaseRepository } from '@core/base.repository';
-// import { AppError, asyncHandler, sendResponse } from '@utils/index';
-// import { FileService } from './file.service';
-// import { FileDocument } from './file.type';
-// import { File } from './file.model';
-// import { queryFileSchema } from './schemas';
-// import { Request, Response } from 'express';
-// import { ApiResponse } from '@/types';
-// import { HttpStatus } from '@/constants/enums';
+import { Request, Response } from 'express';
+import { FileService } from './file.service';
+import { HttpStatus } from '@/shared/constants';
+import { FileDocument, FileLean } from './file.model';
+import { ApiError, asyncHandler, sendResponse } from '@/shared/utils';
+import { ApiResponse } from '@/shared/types';
 
-// export class FileController extends BaseRepository<FileDocument> {
-//   constructor() {
-//     super(File);
-//   }
+export class FileController {
+  constructor(private readonly fileService: FileService) {}
 
-//   private fileService = new FileService();
+  //   getFiles = asyncHandler(async (req: Request, res: Response<ApiResponse<Array<FileLean>>>) => {
+  //     const query = filePaginationSchema.parse(req.query);
 
-//   getFiles = asyncHandler(async (req: Request, res: Response<ApiResponse<FileDocument[]>>) => {
-//     const query = queryFileSchema.parse(req.query);
-//     const files = await this.fileService.getFiles(query);
-//     sendResponse(res, {
-//       statusCode: HttpStatus.OK,
-//       message: 'Admin created successfully',
-//       data: files.data,
-//       pagination: files.pagination,
-//     });
-//   });
+  //     const result = await this.fileService.getFiles(query);
 
-//   upload = asyncHandler(async (req: Request, res: Response<ApiResponse<FileDocument>>) => {
-//     const file = req.file;
-//     if (!file) throw new AppError('File required');
-//     const fileDoc = await this.fileService.upload(file);
-//     sendResponse<FileDocument>(res, {
-//       statusCode: HttpStatus.CREATED,
-//       message: 'File uploaded successfully',
-//       data: fileDoc,
-//     });
-//   });
+  //     sendResponse(res, {
+  //       statusCode: HttpStatus.OK,
+  //       data: result.data,
+  //       pagination: result.pagination,
+  //     });
+  //   });
 
-//   getFile = asyncHandler(async (req: Request, res: Response<ApiResponse<FileDocument>>) => {
-//     const id = req.params.id;
-//     const File = await this.fileService.getFile(id);
-//     sendResponse(res, {
-//       statusCode: HttpStatus.CREATED,
-//       data: File,
-//     });
-//   });
-//   updateFile = asyncHandler(async (req: Request, res: Response<ApiResponse<FileDocument>>) => {
-//     const id = req.params.id;
-//     const File = await this.fileService.updateFile(req.body, id);
-//     sendResponse(res, {
-//       statusCode: HttpStatus.CREATED,
-//       message: 'File updated successfully',
-//       data: File,
-//     });
-//   });
-//   deleteFile = asyncHandler(async (req: Request, res: Response<ApiResponse<null>>) => {
-//     const id = req.params.id;
-//     await this.fileService.deleteFile(id);
-//     sendResponse(res, {
-//       statusCode: HttpStatus.CREATED,
-//       message: 'File delted successfully',
-//       data: null,
-//     });
-//   });
-// }
+  uploadFile = asyncHandler(
+    async (req: Request, res: Response<ApiResponse<Partial<FileDocument>>>) => {
+      if (!req.file) {
+        throw new ApiError('File is required');
+      }
+
+      const fileDoc = await this.fileService.uploadFile(req.file, req.user.sub, req.user.role);
+
+      sendResponse(res, {
+        statusCode: HttpStatus.CREATED,
+        message: 'File uploaded successfully',
+        data: fileDoc,
+      });
+    }
+  );
+
+  getFile = asyncHandler(async (req: Request, res: Response<ApiResponse<FileLean>>) => {
+    const file = await this.fileService.getFile(req.params.id);
+
+    sendResponse(res, {
+      statusCode: HttpStatus.OK,
+      data: file,
+    });
+  });
+}

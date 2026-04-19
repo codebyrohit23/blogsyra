@@ -1,11 +1,11 @@
-import { config } from '@/core/config';
-import { v2 as cloudinary } from 'cloudinary';
+// import { config } from '@/core/config';
+// import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: config.cloudinary.cloudName,
-  api_key: config.cloudinary.apiKey,
-  api_secret: config.cloudinary.apiSecret,
-  secure: true,
-});
+// cloudinary.config({
+//   cloud_name: config.cloudinary.cloudName,
+//   api_key: config.cloudinary.apiKey,
+//   api_secret: config.cloudinary.apiSecret,
+//   secure: true,
+// });
 
-export default cloudinary;
+// export default cloudinary;

@@ -67,10 +67,6 @@ export class AdminRepository {
     return paginate(this.model, { ...payload });
   }
 
-  softDelete(id: MongoId) {
-    return this.model.findByIdAndUpdate(id, { status: EntityStatus.DELETED }, { new: true }).lean();
-  }
-
   async exists(filter: FilterQuery<Admin>) {
     const result = await this.model.exists(filter);
     return !!result;

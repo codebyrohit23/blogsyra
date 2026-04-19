@@ -1,3 +1,1 @@
-// export * from './file.schema';
-// export * from './fileUpload.schema';
-// export * from './queryFiles.schema';
+export { fileUploadSchema } from './file-upload.schema';

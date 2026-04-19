@@ -1,108 +1,84 @@
-// // models/File.js
+import mongoose, { HydratedDocument, InferSchemaType, Schema, Types } from 'mongoose';
+import { FileOwnerRef, FileResourceRef, FileStatus, StorageProvider } from './file.types';
+import { MODELS } from '@/shared/constants';
 
-// import mongoose, { Schema } from 'mongoose';
-// import { FileDocument, StorageProviderEnum, UploadStatusEnum } from './file.type';
-// import { FileOwnerEnum } from './fileOwner.type';
-// import { FileResourceEnum } from './fileResource.type';
+const FileSchema = new Schema(
+  {
+    storageProvider: {
+      type: String,
+      enum: Object.values(StorageProvider),
+      default: StorageProvider.CLOUDINARY,
+      required: true,
+    },
 
-// const FileSchema = new Schema<FileDocument>(
-//   {
-//     // Storage + identity
-//     storageProvider: {
-//       type: String,
-//       enum: Object.values(StorageProviderEnum),
-//       default: StorageProviderEnum.S3,
-//       required: true,
-//     },
-//     bucket: { type: String, required: true },
-//     key: { type: String, required: true },
-//     url: { type: String, required: true },
+    bucket: { type: String, required: true },
 
-//     // file meta
-//     originalName: { type: String, required: true },
-//     filename: { type: String, required: true },
-//     mimeType: { type: String, index: true },
-//     size: { type: Number, required: true },
-//     checksum: { type: String, index: true }, // optional: md5/sha256 to dedupe
+    key: { type: String, required: true },
+    url: { type: String, required: true },
 
-//     // usage / lifecycle
-//     ownerType: {
-//       type: String,
-//       enum: Object.values(FileOwnerEnum),
-//       index: true,
-//     }, // e.g. 'user', 'admin', 'school'
-//     ownerId: { type: Schema.Types.ObjectId, index: true, refPath: 'ownerType' },
+    // originalName: { type: String, required: true },
+    // filename: { type: String, required: true },
 
-//     // Context of usage
-//     resourceType: {
-//       type: String,
-//       enum: Object.values(FileResourceEnum),
-//       index: true,
-//     }, // e.g. 'profile', 'post', 'cover'
-//     resourceId: { type: Schema.Types.ObjectId, index: true, refPath: 'resourceType' },
+    mimeType: { type: String },
+    size: { type: Number, required: true },
 
-//     referenceCount: { type: Number, default: 0 }, // increment when other entities reference it
-//     used: { type: Boolean, default: false, index: true }, // quick flag: is file referenced/used
-//     lastAccessedAt: { type: Date, default: null }, // update when used/served
-//     expiresAt: { type: Date, default: null }, // optional: scheduled expiry (if you want TTL)
+    checksum: { type: String },
 
-//     // soft delete
-//     isDeleted: { type: Boolean, default: false, index: true },
-//     deletedAt: { type: Date, default: null },
+    ownerType: {
+      type: String,
+      enum: Object.values(FileOwnerRef),
+    },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      refPath: 'ownerType',
+    },
 
-//     // operator / audit
-//     uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', index: true },
-//     meta: { type: Schema.Types.Mixed },
+    resourceType: {
+      type: String,
+      enum: Object.values(FileResourceRef),
+    },
+    resourceId: {
+      type: Schema.Types.ObjectId,
+      refPath: 'resourceType',
+    },
 
-//     // if you want to mark a file as "temp" (uploaded but not used)
-//     uploadStatus: {
-//       type: String,
-//       enum: Object.values(UploadStatusEnum),
-//       default: UploadStatusEnum.TEMP,
-//       index: true,
-//     },
+    meta: { type: Schema.Types.Mixed },
 
-//     // optional retention policy tag for lifecycle rules
-//     retentionTag: { type: String, default: null, index: true },
-//   },
-//   {
-//     timestamps: true,
-//   }
-// );
+    status: {
+      type: String,
+      enum: Object.values(FileStatus),
+      default: FileStatus.TEMP,
+    },
 
-// // Indexes and performance:
-// // - compound index for owner lookup (fast retrieving files for an entity)
-// FileSchema.index({ ownerType: 1, ownerId: 1, isDeleted: 1 });
+    deletedAt: Date,
 
-// // - find stale uploads quickly: uploaded but not used and older than X days
-// FileSchema.index({ uploadStatus: 1, createdAt: 1 });
+    retentionTag: { type: String, default: null },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-// // - TTL index example: if you want DB to auto-delete objects after expiresAt (use carefully)
-// // Note: TTL will remove the DB document only; you must delete the S3 object in your cleanup hook.
-// // mongoose will accept: FileSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+FileSchema.index({ key: 1 }, { unique: true });
 
-// /**
-//  * Instance / static helpers
-//  */
-// FileSchema.methods.incrementReference = function (n = 1) {
-//   this.referenceCount += n;
-//   if (this.referenceCount > 0) this.used = true;
-//   return this.save();
-// };
+FileSchema.index({ ownerId: 1, ownerType: 1 });
 
-// FileSchema.methods.decrementReference = function (n = 1) {
-//   this.referenceCount = Math.max(0, this.referenceCount - n);
-//   if (this.referenceCount === 0) this.used = false;
-//   return this.save();
-// };
+FileSchema.index({ resourceId: 1, resourceType: 1 });
 
-// FileSchema.statics.findUnusedOlderThan = function (days) {
-//   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-//   return this.find({
-//     used: false,
-//     isDeleted: false,
-//     createdAt: { $lte: cutoff },
-//   });
-// };
+FileSchema.index({ status: 1 });
 
-// export const File = mongoose.model<FileDocument>('File', FileSchema);
+FileSchema.index({ url: 1 });
+
+FileSchema.index({ deletedAt: 1 });
+
+FileSchema.index({ checksum: 1 });
+
+FileSchema.index({ status: 1, createdAt: -1 });
+
+FileSchema.index({ mimeType: 1 });
+
+export const FileModel = mongoose.model(MODELS.COMMON.FILE, FileSchema);
+
+export type File = InferSchemaType<typeof FileSchema>;
+export type FileDocument = HydratedDocument<File>;
+export type FileLean = { _id: Types.ObjectId } & File;
