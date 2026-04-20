@@ -36,7 +36,7 @@ export class AuthController {
   register = asyncHandler(async (req: Request, res: Response<ApiResponse<AuthResponse>>) => {
     const { admin, tokensResponse } = await this.adminAuthService.register(req.body);
 
-    const cookieMaxAge = config.auth.token.refresh.expiresIn;
+    const cookieMaxAge = config.auth.jwt.refresh.expiresIn;
 
     res.cookie(REFRESH_TOKEN, tokensResponse.refresh.token, {
       httpOnly: true,
@@ -91,7 +91,7 @@ export class AuthController {
 
     const response = await this.adminAuthService.refresh(refreshToken);
 
-    const cookieMaxAge = config.auth.token.refresh.expiresIn;
+    const cookieMaxAge = config.auth.jwt.refresh.expiresIn;
 
     res.cookie(REFRESH_TOKEN, response.refresh.token, {
       httpOnly: true,

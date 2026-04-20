@@ -4,6 +4,7 @@ import { UserAuthService } from './auth.service';
 import { credentialService, identityService, providerService, userService } from '../user';
 import { authService } from '@/modules/common/auth';
 import { googleProvider } from '@/infra/oauth';
+import { fileService } from '../common/file';
 
 const adminAuthService = new UserAuthService(
   authService,
@@ -12,7 +13,8 @@ const adminAuthService = new UserAuthService(
   identityService,
   providerService,
   googleProvider,
-  otpService
+  otpService,
+  fileService
 );
 
 export const authController = new AuthController(adminAuthService);

@@ -2,6 +2,8 @@ import http from 'http';
 
 // import '@queue/queues/notification/notification.worker';
 // import { runSeeds } from '@/core/db/seeds/admin';
+import './worker';
+
 import { config } from '@/core/config';
 import { logger } from '@/core/logger';
 
